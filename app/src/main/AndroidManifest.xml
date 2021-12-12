@@ -125,7 +125,7 @@
 
         </activity>
         <activity
-            android:name="com.theoretics.mobilepos.MainActivity"
+            android:name="com.theoretics.mobilepos.activity.MainActivity8050"
             android:label="@string/app_name"
             android:screenOrientation="portrait" >
 

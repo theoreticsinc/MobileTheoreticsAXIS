@@ -21,7 +21,7 @@ import com.topwise.cloudpos.aidl.system.AidlSystem;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends BaseActivity {
+public class MainActivity8050 extends BaseActivity {
 
     private AidlSystem systemInf = null;
     private GridView mGridView = null;
@@ -109,7 +109,7 @@ public class MainActivity extends BaseActivity {
 //        iconInfos.add(info);
 
 
-        mAdapter = new IconInfoAdapter(MainActivity.this, iconInfos);
+        mAdapter = new IconInfoAdapter(MainActivity8050.this, iconInfos);
         mGridView.setAdapter(mAdapter);
 
     }
@@ -127,14 +127,14 @@ public class MainActivity extends BaseActivity {
                 switch(info.getCmd()){
                     case PublicClass.POS_GET_SYSTEMINTERFACE:
                         //SystemInfoActivity
-                        intent = new Intent(MainActivity.this, SystemInfoActivity.class);
+                        intent = new Intent(MainActivity8050.this, SystemInfoActivity.class);
                         intent.putExtra("Name",info.getName());
                         startActivity(intent);
                         break;
 
                     case PublicClass.POS_NFC:
                         //SystemInfoActivity
-                        intent = new Intent(MainActivity.this, RFCardActivity.class);
+                        intent = new Intent(MainActivity8050.this, RFCardActivity.class);
                         intent.putExtra("Name",info.getName());
                         intent.putExtra("Val", BaseUtils.ACTIVITY_NAME_NFC);
                         startActivity(intent);
@@ -146,42 +146,42 @@ public class MainActivity extends BaseActivity {
                         break;
                     case PublicClass.POS_PRINT:
                         //SystemInfoActivity
-                        intent = new Intent(MainActivity.this, SwipeCardActivity.class);
+                        intent = new Intent(MainActivity8050.this, SwipeCardActivity.class);
                         intent.putExtra("Name",info.getName());
                         intent.putExtra("Val", BaseUtils.ACTIVITY_NAME_PRINT);
                         startActivity(intent);
                         break;
                     case PublicClass.POS_PSAM_CMD:
                         //SystemInfoActivity
-                        intent = new Intent(MainActivity.this, SwipeCardActivity.class);
+                        intent = new Intent(MainActivity8050.this, SwipeCardActivity.class);
                         intent.putExtra("Name",info.getName());
                         intent.putExtra("Val", BaseUtils.ACTIVITY_NAME_PSAM);
                         startActivity(intent);
                         break;
                     case PublicClass.POS_BARCODE:
                         //SystemInfoActivity
-                        intent = new Intent(MainActivity.this, SwipeCardActivity.class);
+                        intent = new Intent(MainActivity8050.this, SwipeCardActivity.class);
                         intent.putExtra("Name",info.getName());
                         intent.putExtra("Val", BaseUtils.ACTIVITY_NAME_BARCODE);
                         startActivity(intent);
                         break;
                     case PublicClass.POS_DECODE:
                         //SystemInfoActivity
-                        intent = new Intent(MainActivity.this, SwipeCardActivity.class);
+                        intent = new Intent(MainActivity8050.this, SwipeCardActivity.class);
                         intent.putExtra("Name",info.getName());
                         intent.putExtra("Val", BaseUtils.ACTIVITY_NAME_DECODE);
                         startActivity(intent);
                         break;
                     case PublicClass.POS_BEEP:
                         //SystemInfoActivity
-                        intent = new Intent(MainActivity.this, SwipeCardActivity.class);
+                        intent = new Intent(MainActivity8050.this, SwipeCardActivity.class);
                         intent.putExtra("Name",info.getName());
                         intent.putExtra("Val", BaseUtils.ACTIVITY_NAME_BEEP);
                         startActivity(intent);
                         break;
                     case PublicClass.POS_LED:
                         //SystemInfoActivity
-                        intent = new Intent(MainActivity.this, SwipeCardActivity.class);
+                        intent = new Intent(MainActivity8050.this, SwipeCardActivity.class);
                         intent.putExtra("Name",info.getName());
                         intent.putExtra("Val", BaseUtils.ACTIVITY_NAME_LED);
                         startActivity(intent);
@@ -189,7 +189,7 @@ public class MainActivity extends BaseActivity {
 
                     case PublicClass.POS_PBOC_TEST:
                         //SystemInfoActivity
-                        intent = new Intent(MainActivity.this, SwipeCardActivity.class);
+                        intent = new Intent(MainActivity8050.this, SwipeCardActivity.class);
                         intent.putExtra("Name",info.getName());
                         intent.putExtra("Val", BaseUtils.ACTIVITY_NAME_PBOCTEST);
                         startActivity(intent);
@@ -198,7 +198,7 @@ public class MainActivity extends BaseActivity {
 //                        startActivity(intent);
                         break;
                     case PublicClass.POS_BAR_TEST:
-                        intent = new Intent(MainActivity.this, BarShowActivity.class);
+                        intent = new Intent(MainActivity8050.this, BarShowActivity.class);
                         startActivity(intent);
                         break;
 

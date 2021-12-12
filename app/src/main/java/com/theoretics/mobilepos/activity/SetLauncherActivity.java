@@ -38,7 +38,7 @@ public class SetLauncherActivity extends AppCompatActivity implements View.OnCli
         filter.addCategory("android.intent.category.HOME");
         filter.addCategory("android.intent.category.DEFAULT");
         Context context = getApplicationContext();
-        ComponentName component = new ComponentName(context.getPackageName(), MainActivity.class.getName());
+        ComponentName component = new ComponentName(context.getPackageName(), MainActivity8050.class.getName());
         ComponentName[] components = new ComponentName[] {new ComponentName("com.android.launcher", "com.android.launcher.Launcher"), component};
         pm.clearPackagePreferredActivities("com.android.launcher");
         pm.addPreferredActivity(filter, IntentFilter.MATCH_CATEGORY_EMPTY, components, component);
@@ -50,7 +50,7 @@ public class SetLauncherActivity extends AppCompatActivity implements View.OnCli
         PackageManager pm = getPackageManager();
         Context context = getApplicationContext();
         String examplePackageName = context.getPackageName();//"com.jeejen.family"; //请修改为需要设置的 package name
-        String exampleActivityName =  MainActivity.class.getName();//"com.jeejen.home.launcher.Launcher"; //请修改为需要设置的 launcher activity name
+        String exampleActivityName =  MainActivity8050.class.getName();//"com.jeejen.home.launcher.Launcher"; //请修改为需要设置的 launcher activity name
 
         ComponentName defaultLauncher = null;
         Intent intent = new Intent(Intent.ACTION_MAIN);

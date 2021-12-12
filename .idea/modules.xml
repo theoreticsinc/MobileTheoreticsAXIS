@@ -2,9 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/MobileZ91Theoretics.iml" filepath="$PROJECT_DIR$/.idea/modules/MobileZ91Theoretics.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/String2Bitmap/MobileZ91Theoretics.String2BitmapLib.iml" filepath="$PROJECT_DIR$/.idea/modules/String2Bitmap/MobileZ91Theoretics.String2BitmapLib.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/MobileZ91Theoretics.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/MobileZ91Theoretics.app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/MobileTheoretics.iml" filepath="$PROJECT_DIR$/.idea/modules/MobileTheoretics.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/String2Bitmap/MobileTheoretics.String2BitmapLib.iml" filepath="$PROJECT_DIR$/.idea/modules/String2Bitmap/MobileTheoretics.String2BitmapLib.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/MobileTheoretics.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/MobileTheoretics.app.iml" />
     </modules>
   </component>
 </project>

@@ -23,7 +23,9 @@ import java.util.List;
 
 public abstract class BaseActivity extends AppCompatActivity {
 	public static final int SHOW_MSG = 0;
-    private static final String TAG = "TPW-BaseTestActivity";
+	private static final String TAG = "TPW-BaseTestActivity";
+
+	public static final String TOPWISE_SERVICE_ACTION = "topwise_cloudpos_device_service";
 
 	private int showLineNum = 0;
 
@@ -40,7 +42,7 @@ public abstract class BaseActivity extends AppCompatActivity {
 
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder serviceBinder) {
-            Log.d(TAG,"aidlService服务连接成功");
+			Log.d(TAG,"aidlService服务连接成功");
 			if(serviceBinder != null){	//绑定成功
 				AidlDeviceService serviceManager = AidlDeviceService.Stub.asInterface(serviceBinder);
 				onDeviceConnected(serviceManager);
@@ -49,7 +51,7 @@ public abstract class BaseActivity extends AppCompatActivity {
 
 		@Override
 		public void onServiceDisconnected(ComponentName name) {
-            Log.d(TAG,"AidlService服务断开了");
+			Log.d(TAG,"AidlService服务断开了");
 		}
 	};
 	public EditText et_money;
@@ -59,7 +61,17 @@ public abstract class BaseActivity extends AppCompatActivity {
 	public EditText et_name;
 
 	//绑定服务
-
+	public void bindService(){
+		Intent intent = new Intent();
+		intent.setAction(TOPWISE_SERVICE_ACTION);
+		final Intent eintent = new Intent(createExplicitFromImplicitIntent(this,intent));
+		boolean flag = bindService(eintent, conn, Context.BIND_AUTO_CREATE);
+		if(flag){
+			Log.d(TAG,"服务绑定成功");
+		}else{
+			Log.d(TAG,"服务绑定失败");
+		}
+	}
 
 
 	private Handler handler = new Handler() {
@@ -84,6 +96,7 @@ public abstract class BaseActivity extends AppCompatActivity {
 	protected void onResume() {
 		// TODO Auto-generated method stub
 		super.onResume();
+		bindService();
 	}
 
 
@@ -104,6 +117,7 @@ public abstract class BaseActivity extends AppCompatActivity {
 	protected void onDestroy() {
 		// TODO Auto-generated method stub
 		super.onDestroy();
+		this.unbindService(conn);
 	}
 	/**
 	 * 服务连接成功时回调
@@ -114,29 +128,29 @@ public abstract class BaseActivity extends AppCompatActivity {
 	public abstract void onDeviceConnected(AidlDeviceService serviceManager);
 
 	public static Intent createExplicitFromImplicitIntent(Context context, Intent implicitIntent) {
-        // Retrieve all services that can match the given intent
-        PackageManager pm = context.getPackageManager();
-        List<ResolveInfo> resolveInfo = pm.queryIntentServices(implicitIntent, 0);
+		// Retrieve all services that can match the given intent
+		PackageManager pm = context.getPackageManager();
+		List<ResolveInfo> resolveInfo = pm.queryIntentServices(implicitIntent, 0);
 
-        // Make sure only one match was found
-        if (resolveInfo == null || resolveInfo.size() != 1) {
-            return null;
-        }
+		// Make sure only one match was found
+		if (resolveInfo == null || resolveInfo.size() != 1) {
+			return null;
+		}
 
-        // Get component info and create ComponentName
-        ResolveInfo serviceInfo = resolveInfo.get(0);
-        String packageName = serviceInfo.serviceInfo.packageName;
-        String className = serviceInfo.serviceInfo.name;
-        ComponentName component = new ComponentName(packageName, className);
+		// Get component info and create ComponentName
+		ResolveInfo serviceInfo = resolveInfo.get(0);
+		String packageName = serviceInfo.serviceInfo.packageName;
+		String className = serviceInfo.serviceInfo.name;
+		ComponentName component = new ComponentName(packageName, className);
 
-        // Create a new intent. Use the old one for extras and such reuse
-        Intent explicitIntent = new Intent(implicitIntent);
+		// Create a new intent. Use the old one for extras and such reuse
+		Intent explicitIntent = new Intent(implicitIntent);
 
-        // Set the component to be explicit
-        explicitIntent.setComponent(component);
+		// Set the component to be explicit
+		explicitIntent.setComponent(component);
 
-        return explicitIntent;
-    }
+		return explicitIntent;
+	}
 
 
 

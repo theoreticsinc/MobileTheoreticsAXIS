@@ -7,8 +7,8 @@ import android.net.wifi.WifiManager;
 import android.os.Handler;
 
 import com.android.print.sdk.PrinterInstance;
-import com.theoretics.mobilepos.IPrinterOperation;
 import com.theoretics.mobilepos.activity.PrintActivity;
+import com.theoretics.mobilepos.util.IPrinterOperation;
 
 import java.util.Timer;
 import java.util.TimerTask;

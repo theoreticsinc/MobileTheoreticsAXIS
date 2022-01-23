@@ -26,6 +26,9 @@ public class RECEIPT {
     private String amountGross = "";
     private String discount = "";
 
+    private double amountGrossDbl = 0;
+    private double discountDbl = 0;
+
     boolean isDiscounted = false;
     private String tendered = "";
     private String changeDue = "";
@@ -37,6 +40,15 @@ public class RECEIPT {
     private String vatsale = "";
     private String vatExemptedSales = "";
     private String vatAdjustment = "";
+
+    private double AmountDueDbl = 0;
+    private double AmountGrossDbl = 0;
+    private double NetOfVATDbl = 0;
+    private double NetOfDiscountDbl = 0;
+    private double vat12Dbl = 0;
+    private double vatsaleDbl = 0;
+    private double vatExemptedSalesDbl = 0;
+    private double vatAdjustmentDbl = 0;
 
     private String SettlementRef = "";
     private String SettlementName = "";
@@ -315,5 +327,77 @@ public class RECEIPT {
 
     public void setSettlementBusStyle(String settlementBusStyle) {
         SettlementBusStyle = settlementBusStyle;
+    }
+
+    public double getAmountGrossDbl() {
+        return amountGrossDbl;
+    }
+
+    public void setAmountGrossDbl(double amountGrossDbl) {
+        this.amountGrossDbl = amountGrossDbl;
+    }
+
+    public double getDiscountDbl() {
+        return discountDbl;
+    }
+
+    public void setDiscountDbl(double discountDbl) {
+        this.discountDbl = discountDbl;
+    }
+
+    public double getAmountDueDbl() {
+        return AmountDueDbl;
+    }
+
+    public void setAmountDueDbl(double amountDueDbl) {
+        AmountDueDbl = amountDueDbl;
+    }
+
+    public double getNetOfVATDbl() {
+        return NetOfVATDbl;
+    }
+
+    public void setNetOfVATDbl(double netOfVATDbl) {
+        NetOfVATDbl = netOfVATDbl;
+    }
+
+    public double getNetOfDiscountDbl() {
+        return NetOfDiscountDbl;
+    }
+
+    public void setNetOfDiscountDbl(double netOfDiscountDbl) {
+        NetOfDiscountDbl = netOfDiscountDbl;
+    }
+
+    public double getVat12Dbl() {
+        return vat12Dbl;
+    }
+
+    public void setVat12Dbl(double vat12Dbl) {
+        this.vat12Dbl = vat12Dbl;
+    }
+
+    public double getVatsaleDbl() {
+        return vatsaleDbl;
+    }
+
+    public void setVatsaleDbl(double vatsaleDbl) {
+        this.vatsaleDbl = vatsaleDbl;
+    }
+
+    public double getVatExemptedSalesDbl() {
+        return vatExemptedSalesDbl;
+    }
+
+    public void setVatExemptedSalesDbl(double vatExemptedSalesDbl) {
+        this.vatExemptedSalesDbl = vatExemptedSalesDbl;
+    }
+
+    public double getVatAdjustmentDbl() {
+        return vatAdjustmentDbl;
+    }
+
+    public void setVatAdjustmentDbl(double vatAdjustmentDbl) {
+        this.vatAdjustmentDbl = vatAdjustmentDbl;
     }
 }

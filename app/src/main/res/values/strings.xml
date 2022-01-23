@@ -512,7 +512,6 @@
     <string name="title_activity_logout">LogoutActivity</string>
 
 
-
     <string name="scanning">Scanning Device Scanning Device...</string>
     <string name="select_device">Please select the device to connect</string>
     <string name="none_paired">No matching device</string>
@@ -890,9 +889,9 @@
     <string name="wifi_changing_network">Requesting connection to network\u2026</string>
     <string name="button_tip">Click too quickly,pls try again later！</string>
     <string name="update_notification">Found new version of firmware, click update</string>
-    
-    
-     <string name="app_picker_name">Applications</string>
+
+
+    <string name="app_picker_name">Applications</string>
     <string name="lbl_card_number">Card Number</string>
     <string name="vip_name">VIP Name</string>
     <string name="plate_number">Plate Number</string>

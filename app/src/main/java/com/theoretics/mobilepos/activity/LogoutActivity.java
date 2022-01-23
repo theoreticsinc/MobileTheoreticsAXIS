@@ -7,6 +7,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.theoretics.mobilepos.R;
@@ -47,6 +48,7 @@ public class LogoutActivity extends BaseActivity {
 
     private EditText loginUsername;
     private EditText loginPassword;
+    private ImageView printZReadbtn;
 
     ReceiptUtils rec = null;
     DBHelper dbh = null;
@@ -89,6 +91,7 @@ public class LogoutActivity extends BaseActivity {
         containme = findViewById(R.id.containme);
         loginUsername = (EditText) containme.findViewById(R.id.logoutUsername);
         loginPassword = (EditText) containme.findViewById(R.id.logoutPassword);
+        printZReadbtn = containme.findViewById(R.id.printZReadbtn);
 
         btnYes = (Button) containme.findViewById(R.id.buttonYes);
         btnNo = (Button) containme.findViewById(R.id.buttonNo);
@@ -125,6 +128,14 @@ public class LogoutActivity extends BaseActivity {
 
             }
         });
+        printZReadbtn.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        printZRead();
+                    }
+                }
+        );
 
         rec = new ReceiptUtils();
         rec.initiate(getApplicationContext());
@@ -366,8 +377,8 @@ public class LogoutActivity extends BaseActivity {
             printNsave("Today's Sales      : " + df2.format(ZREADING.getInstance().getTodaysSales()), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
             printNsave("VAT Sales          : " + df2.format(ZREADING.getInstance().getVatableSales()), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
             printNsave("12% VAT Sales      : " + df2.format(ZREADING.getInstance().getVat12Sales()), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
-            printNsave("Beginning OR       : " + ZREADING.getInstance().getBeginOR(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
-            printNsave("Ending OR          : " + ZREADING.getInstance().getEndOR(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+            printNsave("Beginning OR : " + ZREADING.getInstance().getBeginOR(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+            printNsave("Ending OR   : " + ZREADING.getInstance().getEndOR(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
             printNsave("Beginning Trans No : " + ZREADING.getInstance().getBeginTrans(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
             printNsave("Ending Trans No    : " + ZREADING.getInstance().getEndTrans(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
             printNsave("Old Grand Total    : " + ZREADING.getInstance().getBeginBalance(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
@@ -391,12 +402,12 @@ public class LogoutActivity extends BaseActivity {
             printNsave("Dialysis Parkers    :" + XREADING.getInstance().getDialysisCount() + "   " + df2.format(XREADING.getInstance().getDialysisAmount()), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
             printNsave("", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
 
-            printNsave("Total Cars Served   : " + XREADING.getInstance().getCarsServed(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.CENTER);
-            printNsave("Total Collection    : " + df2.format(XREADING.getInstance().getTotalAmount()), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.CENTER);
+            printNsave("Total Cars Served   : " + XREADING.getInstance().getCarsServed(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+            printNsave("Total Collection    : " + df2.format(XREADING.getInstance().getTotalAmount()), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
             printNsave("", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
-            printNsave("Date Printed        : " + sdf2.format(now), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
-            printNsave("Accumulated Grand Total    : " + ZREADING.getInstance().getAccumulatedGrand(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
-            printNsave("Accumulated Gross Total    : " + ZREADING.getInstance().getAccumulatedGross(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+            printNsave("Date Printed : " + sdf2.format(now), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+            printNsave("Accumulated Grand Total : " + ZREADING.getInstance().getAccumulatedGrand(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+            printNsave("Accumulated Gross Total : " + ZREADING.getInstance().getAccumulatedGross(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
 
             /*
             Date Printed       : 2020-10-27 11:05
@@ -434,8 +445,8 @@ public class LogoutActivity extends BaseActivity {
             printNsave("Teller Sign   : _____________________", PrinterConstant.FontSize.SMALL, false, PrintItemObj.ALIGN.CENTER);
             printNsave("Supervisor    : _____________________", PrinterConstant.FontSize.SMALL, false, PrintItemObj.ALIGN.CENTER);
 
-            printNsave("", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
-            printNsave("", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+            printNsave("\n", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+            printNsave("\n", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
 
             printerDev.printText(obj2Print, new AidlPrinterListener.Stub() {
 

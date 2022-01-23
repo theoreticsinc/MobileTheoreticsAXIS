@@ -1,4 +1,4 @@
-package com.theoretics.mobilepos;
+package com.theoretics.mobilepos.util;
 
 import android.content.Intent;
 

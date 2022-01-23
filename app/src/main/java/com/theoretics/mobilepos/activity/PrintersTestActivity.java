@@ -32,10 +32,10 @@ import com.imagpay.enums.PrintStatus;
 import com.imagpay.enums.PrnTextFont;
 import com.imagpay.mpos.MposHandler;
 import com.theoretics.mobilepos.CardtestActivity;
-import com.theoretics.mobilepos.IPrinterOperation;
 import com.theoretics.mobilepos.R;
 import com.theoretics.mobilepos.bluetooth.BluetoothOperation;
 import com.theoretics.mobilepos.usb.UsbOperation;
+import com.theoretics.mobilepos.util.IPrinterOperation;
 import com.theoretics.mobilepos.util.PrintUtils;
 import com.theoretics.mobilepos.wifi.WifiOperation;
 import com.theoretics.ui.ImageInfo;
@@ -122,7 +122,7 @@ public class PrintersTestActivity extends Activity implements
         if (!isConnected) {
             switch (currIndex) {
                 case 0: // bluetooth
-                    myOpertion = new BluetoothOperation(PrintersTestActivity.this, mHandler);
+                    myOpertion = (IPrinterOperation) new BluetoothOperation(PrintersTestActivity.this, mHandler);
                     break;
                 case 1: // wifi
                     myOpertion = new WifiOperation(PrintersTestActivity.this, mHandler);

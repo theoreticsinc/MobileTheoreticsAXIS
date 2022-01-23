@@ -25,15 +25,18 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.print.sdk.PrinterConstants;
-import com.theoretics.mobilepos.IPrinterOperation;
+import com.android.print.sdk.PrinterInstance;
 import com.theoretics.mobilepos.R;
+import com.theoretics.mobilepos.bean.CONSTANTS;
 import com.theoretics.mobilepos.bean.GLOBALS;
 import com.theoretics.mobilepos.bluetooth.BluetoothOperation;
 import com.theoretics.mobilepos.permission.EasyPermission;
 import com.theoretics.mobilepos.util.DBHelper;
 import com.theoretics.mobilepos.util.HexUtil;
 import com.theoretics.mobilepos.util.HttpHandler;
+import com.theoretics.mobilepos.util.IPrinterOperation;
 import com.theoretics.mobilepos.util.NfcAutoCheck;
+import com.theoretics.mobilepos.util.PrintUtils;
 import com.theoretics.mobilepos.util.ReceiptUtils;
 import com.topwise.cloudpos.aidl.AidlDeviceService;
 import com.topwise.cloudpos.aidl.rfcard.AidlRFCard;
@@ -108,9 +111,9 @@ public class ParkingExitActivity extends BaseActivity implements EasyPermission.
     ReceiptUtils rec = null;
 
     private static boolean isConnected;
-    //private IPrinterOperation myOperation;
-    //private PrinterInstance mPrinter;
-    //private ProgressDialog dialog;
+    private IPrinterOperation myOperation;
+    private PrinterInstance mPrinter;
+    private ProgressDialog dialog;
 
     File internalfile;
     File sdfile;
@@ -227,7 +230,7 @@ public class ParkingExitActivity extends BaseActivity implements EasyPermission.
                 intent.putExtra("inputPlate",inputPlate.getText().toString());
 
                 intent.putExtra("isDiscounted",false);
-                intent.putExtra("TRType","RM");
+                intent.putExtra("TRType", CONSTANTS.getInstance().getDefaultPType());
                 intent.putExtra("daysElapsed", daysElapsed);
                 intent.putExtra("hrsRemaining", hrsRemaining);
                 intent.putExtra("minsRemaining", minsRemaining);
@@ -310,12 +313,13 @@ public class ParkingExitActivity extends BaseActivity implements EasyPermission.
         //connClick();
     }
 
+
     @Override
     protected void onActivityResult(final int requestCode, int resultCode, final Intent data) {
         switch (requestCode) {
             case CONNECT_DEVICE:
                 if (resultCode == Activity.RESULT_OK) {
-                    //GLOBALS.getInstance().getDialog().show();
+                    GLOBALS.getInstance().getDialog().show();
                     new Thread(new Runnable(){
                         public void run() {
                             GLOBALS.getInstance().getMyOperation().open(data);
@@ -334,7 +338,7 @@ public class ParkingExitActivity extends BaseActivity implements EasyPermission.
 
     private void openConn(){
         if (!isConnected) {
-            //myOperation = new BluetoothOperation(ParkingExitActivity.this, mHandler);
+            //myOperation = (IPrinterOperation) new BluetoothOperation(ParkingExitActivity.this, mHandler);
             //myOperation.chooseDevice();
             GLOBALS.getInstance().setMyOperation((IPrinterOperation) new BluetoothOperation(context, mHandler));
             //GLOBALS.getInstance().getMyOperation().btAutoConn(context,  mHandler);
@@ -974,7 +978,7 @@ String sql = "INSERT INTO `carpark`.`exit_trans` (`pkid`, `void`, `voidRefID`, `
         new Thread(){
             @Override
             public void run() {
-                //PrintUtils.printBTText(GLOBALS.getInstance().getmPrinter(), "This is a Test");
+                PrintUtils.printBTText(GLOBALS.getInstance().getmPrinter(), "This is a Test");
             }
         }.start();
     }

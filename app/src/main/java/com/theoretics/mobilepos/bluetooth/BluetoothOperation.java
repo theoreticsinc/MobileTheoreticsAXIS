@@ -1,5 +1,7 @@
 package com.theoretics.mobilepos.bluetooth;
 
+import java.lang.reflect.Method;
+
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -12,10 +14,8 @@ import android.util.Log;
 
 import com.android.print.sdk.PrinterConstants.Connect;
 import com.android.print.sdk.PrinterInstance;
-import com.theoretics.mobilepos.IPrinterOperation;
-import com.theoretics.mobilepos.activity.PrintActivity;
-
-import java.lang.reflect.Method;
+import com.theoretics.mobilepos.activity.MainBTActivity;
+import com.theoretics.mobilepos.util.IPrinterOperation;
 
 public class BluetoothOperation implements IPrinterOperation {
     private static final String TAG = "BluetoothOpertion";
@@ -192,11 +192,11 @@ public class BluetoothOperation implements IPrinterOperation {
             Intent enableIntent = new Intent(
                     BluetoothAdapter.ACTION_REQUEST_ENABLE);
             ((Activity) mContext).startActivityForResult(enableIntent,
-                    PrintActivity.ENABLE_BT);
+                    MainBTActivity.ENABLE_BT);
         } else {
             Intent intent = new Intent(mContext, BluetoothDeviceList.class);
             ((Activity) mContext).startActivityForResult(intent,
-                    PrintActivity.CONNECT_DEVICE);
+                    MainBTActivity.CONNECT_DEVICE);
         }
     }
 }

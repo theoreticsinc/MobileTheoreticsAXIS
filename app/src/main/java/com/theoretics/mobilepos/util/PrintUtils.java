@@ -15,6 +15,8 @@ import com.android.print.sdk.PrinterInstance;
 import com.android.print.sdk.PrinterType;
 import com.android.print.sdk.Table;
 import com.theoretics.mobilepos.R;
+import com.theoretics.mobilepos.bean.CONSTANTS;
+import com.theoretics.mobilepos.bean.GLOBALS;
 
 public class PrintUtils {
 
@@ -23,10 +25,112 @@ public class PrintUtils {
         mPrinter.printText(text2Print);
         // 换行
         // mPrinter.setPrinter(Command.PRINT_AND_NEWLINE);
-        mPrinter.setPrinter(Command.PRINT_AND_WAKE_PAPER_BY_LINE, 2); // 换2行
+        //mPrinter.setPrinter(Command.PRINT_AND_WAKE_PAPER_BY_LINE, 2); // 换2行
 
         //切刀
         //mPrinter.cutPaper();
+    }
+    public static void printBTFooter(Resources resources) {
+        PrinterInstance mPrinter = GLOBALS.getInstance().getmPrinter();
+        mPrinter.init();
+        //Bitmap bitmap = BitmapFactory.decodeResource(resources,
+        //        R.drawable.cghheader1);
+        //mPrinter.printImage(bitmap);
+        CanvasPrint cp = new CanvasPrint();
+        /*
+         * 初始化画布，画布的宽度为变量，一般有两个选择： 1、58mm型号打印机实际可用是48mm，48*8=384px
+         * 2、80mm型号打印机实际可用是72mm，72*8=576px 因为画布的高度是无限制的，但从内存分配方面考虑要小于4M比较合适，
+         * 所以预置为宽度的5倍。 初始化画笔，默认属性有： 1、消除锯齿 2、设置画笔颜色为黑色
+         */
+        // init 方法包含cp.initCanvas(550)和cp.initPaint(), T9打印宽度为72mm,其他为47mm.
+           //cp.init(PrinterType.T5);
+        cp.init(PrinterType.TIII);
+        //cp.init(PrinterType.T9);
+
+        // 非中文使用空格分隔单词
+        cp.setUseSplit(true);
+        cp.setUseSplitAndString(true, " ");
+        // 阿拉伯文靠右显示
+        cp.setTextAlignRight(false);
+        /*
+         * 插入图片函数: drawImage(float x, float y, String path)
+         * 其中(x,y)是指插入图片的左上顶点坐标。
+         */
+        FontProperty fp = new FontProperty();
+        fp.setFont(false, false, false, false, 20, null);
+        cp.setFontProperty(fp);
+        cp.drawText(0,10,"");
+        cp.drawText(20,40,"                    please visit");
+        cp.drawText(20,60,"          www.theoretics.com.ph");
+        cp.drawText(20,80,"          PARKING POS SUPPLIER");
+        cp.drawText(1,100,"    APPLIED MODERN THEORETICS INC.");
+        cp.drawText(0,120,"    ACCRED: 0470083988742019071113");
+        cp.drawText(25,140,"         Date Issued: 02/05/2020");
+        cp.drawText(25,160,"         Valid Until: 02/05/2025");
+        fp.setFont(false, false, false, false, 19, null);
+        cp.setFontProperty(fp);
+        cp.drawText(0,180,"  " + CONSTANTS.getInstance().getPTU());
+        cp.drawText(25,200,"         Date Issued: 03/03/2020");
+        cp.drawText(25,220,"         Valid Until: 03/03/2025");
+        cp.drawText(20,240,"       THANK YOU. FOR PARKING");
+
+        mPrinter.printImage(cp.getCanvasImage());
+
+        mPrinter.setPrinter(Command.PRINT_AND_WAKE_PAPER_BY_LINE, 1);
+    }
+
+    public static void printBTHeader(Resources resources) {
+        PrinterInstance mPrinter = GLOBALS.getInstance().getmPrinter();
+        mPrinter.init();
+        //Bitmap bitmap = BitmapFactory.decodeResource(resources,
+        //        R.drawable.cghheader1);
+        //mPrinter.printImage(bitmap);
+        CanvasPrint cp = new CanvasPrint();
+        /*
+         * 初始化画布，画布的宽度为变量，一般有两个选择： 1、58mm型号打印机实际可用是48mm，48*8=384px
+         * 2、80mm型号打印机实际可用是72mm，72*8=576px 因为画布的高度是无限制的，但从内存分配方面考虑要小于4M比较合适，
+         * 所以预置为宽度的5倍。 初始化画笔，默认属性有： 1、消除锯齿 2、设置画笔颜色为黑色
+         */
+        // init 方法包含cp.initCanvas(550)和cp.initPaint(), T9打印宽度为72mm,其他为47mm.
+        //cp.init(PrinterType.T5);
+        cp.init(PrinterType.TIII);
+        //cp.init(PrinterType.T9);
+
+        // 非中文使用空格分隔单词
+        cp.setUseSplit(true);
+        cp.setUseSplitAndString(true, " ");
+        // 阿拉伯文靠右显示
+        cp.setTextAlignRight(false);
+        /*
+         * 插入图片函数: drawImage(float x, float y, String path)
+         * 其中(x,y)是指插入图片的左上顶点坐标。
+         */
+        FontProperty fp = new FontProperty();
+        fp.setFont(false, false, false, false, 19, null);
+        cp.setFontProperty(fp);
+        cp.drawText(0,10,"");
+        cp.drawText(0,40,"CHINESE GENERAL HOSPITAL MEDICAL CTR");
+        fp.setFont(false, false, false, false, 20, null);
+        cp.setFontProperty(fp);
+        cp.drawText(0,60,"286 BLUMENTRITT ST. STA. CRUZ MANILA");
+        fp.setFont(false, false, false, false, 20, null);
+        cp.setFontProperty(fp);
+        cp.drawText(20,80,"     " + CONSTANTS.getInstance().getREGTIN());
+        cp.drawText(40,100,"        " + CONSTANTS.getInstance().getMIN());
+        fp.setFont(false, false, false, false, 19, null);
+        cp.setFontProperty(fp);
+        cp.drawText(0,120,"  " + CONSTANTS.getInstance().getPTU());
+
+        mPrinter.printImage(cp.getCanvasImage());
+
+        mPrinter.setPrinter(Command.PRINT_AND_WAKE_PAPER_BY_LINE, 1);
+    }
+
+    public static void printBTText(String text2Print, int fontsize, boolean isBold, int two) {
+        PrinterInstance mPrinter = GLOBALS.getInstance().getmPrinter();
+        mPrinter.init();
+
+        mPrinter.printText(text2Print + "\n" );
     }
 
     public static void printText(Resources resources, PrinterInstance mPrinter) {

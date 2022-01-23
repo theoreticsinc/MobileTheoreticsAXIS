@@ -3,7 +3,7 @@ package com.theoretics.mobilepos.bean;
 import android.app.ProgressDialog;
 
 import com.android.print.sdk.PrinterInstance;
-import com.theoretics.mobilepos.IPrinterOperation;
+import com.theoretics.mobilepos.util.IPrinterOperation;
 
 public class GLOBALS {
     private static GLOBALS instance;
@@ -324,4 +324,5 @@ public class GLOBALS {
         }
         return instance;
     }
+
 }

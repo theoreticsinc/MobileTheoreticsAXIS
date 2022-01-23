@@ -133,6 +133,179 @@ public class HttpHandler {
         return retStr;
     }
 
+
+    public String saveRawText2Server(final String urlWebService, final String rawText) {
+        //final String[] retStr = new String[1];
+        /*
+         * As fetching the json string is a network operation
+         * And we cannot perform a network operation in main thread
+         * so we need an AsyncTask
+         * The constrains defined here are
+         * Void -> We are not passing anything
+         * Void -> Nothing at progress update as well
+         * String -> After completion it should return a string and it will be the json string
+         * */
+        class SendSQL extends AsyncTask<Void, Void, String> {
+
+            //this method will be called before execution
+            //you can display a progress bar or something
+            //so that user can understand that he should wait
+            //as network operation may take some timecm n'\
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+            }
+
+            //this method will be called after execution
+            //so here we are displaying a toast with the json string
+            @Override
+            protected void onPostExecute(String s) {
+                super.onPostExecute(s);
+                //Toast.makeText(getApplicationContext(), s, Toast.LENGTH_SHORT).show();
+                retStr = s;
+
+            }
+
+            //in this method we are fetching the json string
+            @Override
+            protected String doInBackground(Void... voids) {
+
+                try {
+                    System.out.println("ANGELO : UPDATING TO SERVER " + urlWebService + rawText);
+                    //creating a URL
+                    String u = urlWebService + rawText;
+                    URL url = new URL(u);
+
+                    //Opening the URL using HttpURLConnection
+                    HttpURLConnection con = (HttpURLConnection) url.openConnection();
+
+                    //StringBuilder object to read the string from the service
+                    StringBuilder sb = new StringBuilder();
+
+                    //We will use a buffered reader to read the string from service
+                    BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(con.getInputStream()));
+
+                    //A simple string to read values from each line
+                    String json = "";
+                    int i = 0;
+                    //reading until we don't find null
+                    while ((json = bufferedReader.readLine()) != null) {
+                        i++;
+                        //appending it to string builder
+                        sb.append(json + "\n");
+                        //System.out.println("ANGELO : [" + i + "]" + json + "\n");
+                        //insertNewVIP2DB(dbh, json);
+                    }
+                    System.out.println("ANGELO : [" + i + "]" + sb.toString());
+                    //finally returning the read string
+
+                    //retJSON[0] = readJSON(json);
+                    //Date now = new Date();
+                    //String n = sdf.format(now);
+                    //System.out.println(n);
+                    //dbh.updateLDC(sql);
+
+                    return "true";
+                } catch (Exception e) {
+                    return null;
+                }
+
+            }
+        }
+
+        //creating asynctask object and executing it
+        SendSQL sendSQL = new SendSQL();
+        sendSQL.execute();
+
+        return retStr;
+    }
+
+    public String sendGRAND2Server(final String urlWebService, final String rawText) {
+        //final String[] retStr = new String[1];
+        /*
+         * As fetching the json string is a network operation
+         * And we cannot perform a network operation in main thread
+         * so we need an AsyncTask
+         * The constrains defined here are
+         * Void -> We are not passing anything
+         * Void -> Nothing at progress update as well
+         * String -> After completion it should return a string and it will be the json string
+         * */
+        class SendSQL extends AsyncTask<Void, Void, String> {
+
+            //this method will be called before execution
+            //you can display a progress bar or something
+            //so that user can understand that he should wait
+            //as network operation may take some timecm n'\
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+            }
+
+            //this method will be called after execution
+            //so here we are displaying a toast with the json string
+            @Override
+            protected void onPostExecute(String s) {
+                super.onPostExecute(s);
+                //Toast.makeText(getApplicationContext(), s, Toast.LENGTH_SHORT).show();
+                retStr = s;
+
+            }
+
+            //in this method we are fetching the json string
+            @Override
+            protected String doInBackground(Void... voids) {
+
+                try {
+                    System.out.println("ANGELO : UPDATING TO SERVER " + urlWebService + rawText);
+                    //creating a URL
+                    String u = urlWebService + rawText;
+                    URL url = new URL(u);
+
+                    //Opening the URL using HttpURLConnection
+                    HttpURLConnection con = (HttpURLConnection) url.openConnection();
+
+                    //StringBuilder object to read the string from the service
+                    StringBuilder sb = new StringBuilder();
+
+                    //We will use a buffered reader to read the string from service
+                    BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(con.getInputStream()));
+
+                    //A simple string to read values from each line
+                    String json = "";
+                    int i = 0;
+                    //reading until we don't find null
+                    while ((json = bufferedReader.readLine()) != null) {
+                        i++;
+                        //appending it to string builder
+                        sb.append(json + "\n");
+                        //System.out.println("ANGELO : [" + i + "]" + json + "\n");
+                        //insertNewVIP2DB(dbh, json);
+                    }
+                    System.out.println("ANGELO : [" + i + "]" + sb.toString());
+                    //finally returning the read string
+
+                    //retJSON[0] = readJSON(json);
+                    //Date now = new Date();
+                    //String n = sdf.format(now);
+                    //System.out.println(n);
+                    //dbh.updateLDC(sql);
+
+                    return "true";
+                } catch (Exception e) {
+                    return null;
+                }
+
+            }
+        }
+
+        //creating asynctask object and executing it
+        SendSQL sendSQL = new SendSQL();
+        sendSQL.execute();
+
+        return retStr;
+    }
+
     public String makeAmbulatory2Server(final String urlWebService, final String sql) {
         //final String[] retStr = new String[1];
         /*

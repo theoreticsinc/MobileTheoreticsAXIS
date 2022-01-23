@@ -1161,6 +1161,7 @@ public class DBHelper extends SQLiteOpenHelper {
         db.execSQL("INSERT INTO " + POS_TABLE_NAME + " VALUES(null, 'Joan2', '" + md5("Joan2") + "', 'Joan2')");
         db.execSQL("INSERT INTO " + POS_TABLE_NAME + " VALUES(null, 'Hazel2', '" + md5("Hazel2") + "', 'Hazel2')");
         db.execSQL("INSERT INTO " + POS_TABLE_NAME + " VALUES(null, 'Carla2', '" + md5("Carla2") + "', 'Carla2')");
+        db.execSQL("INSERT INTO " + POS_TABLE_NAME + " VALUES(null, 'Bryan', '" + md5("Bryan") + "', 'Bryan')");
         db.execSQL("INSERT INTO " + POS_TABLE_NAME + " VALUES(null, 'Claudine2', '" + md5("Claudine2") + "', 'Claudine2')");
         db.execSQL("INSERT INTO " + POS_TABLE_NAME + " VALUES(null, 'teller1', '" + md5("teller1") + "', 'teller1')");
         db.execSQL("INSERT INTO " + POS_TABLE_NAME + " VALUES(null, 'angelo', '" + md5("angelo") + "', 'angelo')");

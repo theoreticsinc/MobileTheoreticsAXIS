@@ -24,10 +24,10 @@ import android.widget.Toast;
 
 import com.android.print.sdk.PrinterConstants.Connect;
 import com.android.print.sdk.PrinterInstance;
-import com.theoretics.mobilepos.IPrinterOperation;
 import com.theoretics.mobilepos.R;
 import com.theoretics.mobilepos.bluetooth.BluetoothOperation;
 import com.theoretics.mobilepos.usb.UsbOperation;
+import com.theoretics.mobilepos.util.IPrinterOperation;
 import com.theoretics.mobilepos.util.PrintUtils;
 import com.theoretics.mobilepos.wifi.WifiOperation;
 
@@ -245,13 +245,13 @@ public class PrintActivity extends Activity implements OnClickListener{
         if (!isConnected) {
             switch (currIndex) {
                 case 0: // bluetooth
-                    myOpertion = new BluetoothOperation(PrintActivity.this, mHandler);
+                    myOpertion = (IPrinterOperation) new BluetoothOperation(PrintActivity.this, mHandler);
                     break;
                 case 1: // wifi
-                    myOpertion = new WifiOperation(PrintActivity.this, mHandler);
+                    //myOpertion = new WifiOperation(PrintActivity.this, mHandler);
                     break;
                 case 2: // usb
-                    myOpertion = new UsbOperation(PrintActivity.this, mHandler);
+                    //myOpertion = new UsbOperation(PrintActivity.this, mHandler);
                     break;
                 default:
                     break;

@@ -11,12 +11,12 @@
         android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS"
         tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.BLUETOOTH"/>
-    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
-    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.hardware.usb.host"/>
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.hardware.usb.host" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" /> <!-- <uses-permission android:name="android.permission.WRITE_SETTINGS" /> -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
@@ -55,10 +55,13 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
+        <activity android:name=".activity.WriteSDCardActivity">
+
+        </activity>
         <activity
             android:name=".activity.LogoutActivity"
             android:label="@string/title_activity_logout"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".activity.ComputationActivity"
             android:label="@string/title_activity_computation"
@@ -66,21 +69,28 @@
         <activity
             android:name=".activity.PrintActivity"
             android:label="@string/title_activity_login"
-            android:theme="@style/AppTheme.NoActionBar">
-
-        </activity>
+            android:theme="@style/AppTheme.NoActionBar"></activity>
         <activity
             android:name=".activity.ParkingExitActivity"
             android:label="@string/title_activity_parking_exit"
             android:theme="@style/AppTheme.NoActionBar">
-
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity>
+        <activity
+            android:name=".activity.MainBTActivity"
+            android:label="@string/app_name"
+            android:screenOrientation="portrait"></activity>
+        <activity
+            android:name=".activity.MainActivity8050"
+            android:label="@string/app_name"
+            android:screenOrientation="portrait"></activity>
         <activity
             android:name=".activity.PrintersTestActivity"
             android:label="@string/title_activity_parking_exit"
-            android:theme="@style/AppTheme.NoActionBar">
-
-        </activity>
+            android:theme="@style/AppTheme.NoActionBar"></activity>
         <activity
             android:name=".activity.LoginActivity"
             android:label="@string/title_activity_login"
@@ -90,14 +100,11 @@
             android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar"
-            android:windowSoftInputMode="adjustPan|stateHidden" >
-
-        </activity>
+            android:windowSoftInputMode="adjustPan|stateHidden"></activity>
         <activity
             android:name=".activity.SystemInfoActivity"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
-
         <activity
             android:name=".activity.SwipeCardActivity"
             android:screenOrientation="portrait"
@@ -112,42 +119,26 @@
         <activity
             android:name=".bluetooth.BluetoothDeviceList"
             android:screenOrientation="portrait"
-            android:theme="@android:style/Theme.Dialog"/>
-
+            android:theme="@android:style/Theme.Dialog" />
         <activity
             android:name=".usb.UsbDeviceList"
             android:screenOrientation="portrait"
-            android:theme="@android:style/Theme.Dialog"/>
+            android:theme="@android:style/Theme.Dialog" />
         <activity
-            android:name="CardtestActivity"
+            android:name=".CardtestActivity"
             android:label="@string/app_name"
-            android:screenOrientation="portrait" >
-
-        </activity>
-        <activity
-            android:name="com.theoretics.mobilepos.activity.MainActivity8050"
-            android:label="@string/app_name"
-            android:screenOrientation="portrait" >
-
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+            android:screenOrientation="portrait"></activity>
         <activity
             android:name="com.google.zxing.client.android.CaptureActivity"
             android:configChanges="orientation|keyboardHidden"
             android:screenOrientation="portrait"
-            android:windowSoftInputMode="stateAlwaysHidden" >
-        </activity>
+            android:windowSoftInputMode="stateAlwaysHidden"></activity>
         <activity
-            android:name="com.theoretics.mobilepos.Z90FingerprintActivity"
-            android:screenOrientation="portrait" >
-        </activity>
+            android:name=".Z90FingerprintActivity"
+            android:screenOrientation="portrait"></activity>
         <activity
-            android:name="com.theoretics.mobilepos.FingerprintActivity"
-            android:screenOrientation="portrait" >
-        </activity>
+            android:name=".FingerprintActivity"
+            android:screenOrientation="portrait"></activity>
         <activity
             android:name="com.google.zxing.client.android.PreferencesActivity"
             android:label="@string/preferences_name"

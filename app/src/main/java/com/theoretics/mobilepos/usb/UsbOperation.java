@@ -13,8 +13,8 @@ import android.os.Handler;
 import android.util.Log;
 
 import com.android.print.sdk.PrinterInstance;
-import com.theoretics.mobilepos.IPrinterOperation;
 import com.theoretics.mobilepos.activity.PrintActivity;
+import com.theoretics.mobilepos.util.IPrinterOperation;
 
 @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR1)
 public class UsbOperation implements IPrinterOperation {

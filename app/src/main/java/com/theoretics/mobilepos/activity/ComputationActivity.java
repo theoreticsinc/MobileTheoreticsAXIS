@@ -1,5 +1,6 @@
 package com.theoretics.mobilepos.activity;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -24,7 +25,6 @@ import com.imagpay.SwipeListener;
 import com.imagpay.enums.CardDetected;
 import com.imagpay.enums.EmvStatus;
 import com.imagpay.enums.PrintStatus;
-import com.theoretics.mobilepos.IPrinterOperation;
 import com.theoretics.mobilepos.R;
 import com.theoretics.mobilepos.bean.CONSTANTS;
 import com.theoretics.mobilepos.bean.GLOBALS;
@@ -33,6 +33,7 @@ import com.theoretics.mobilepos.bluetooth.BluetoothOperation;
 import com.theoretics.mobilepos.util.ComputeAPI;
 import com.theoretics.mobilepos.util.DBHelper;
 import com.theoretics.mobilepos.util.HttpHandler;
+import com.theoretics.mobilepos.util.IPrinterOperation;
 import com.theoretics.mobilepos.util.PrintUtils;
 import com.theoretics.mobilepos.util.ReceiptUtils;
 import com.topwise.cloudpos.aidl.AidlDeviceService;
@@ -57,6 +58,11 @@ public class ComputationActivity extends BaseActivity implements
     private ComputationActivity.MyTask myTask;
     private String bt_mac;
     private String bt_name;
+
+    public static final int CONNECT_DEVICE = 1;             //选择设备
+    public static final int ENABLE_BT = 2;                  //启动蓝牙
+    public static final int REQUEST_SELECT_FILE = 3;        //选择文件
+    public static final int REQUEST_PERMISSION = 4;         //读写权限
 
     private AidlPrinter printerDev = null;
     private AidlDeviceService deviceManager = null;
@@ -88,7 +94,7 @@ public class ComputationActivity extends BaseActivity implements
 
     private TextView amountDueTV = null;
     private Button confirmBtn = null;
-    private Button testBtn = null;
+    //private Button testBtn = null;
 
     private boolean isDiscounted = false;
     String TRType = "";
@@ -135,7 +141,7 @@ public class ComputationActivity extends BaseActivity implements
         changeDueTV = findViewById(R.id.change);
         amountDueTV = (TextView) findViewById(R.id.amountDueTV);
         confirmBtn = findViewById(R.id.printBtn);
-        testBtn = findViewById(R.id.testBtn);
+        //testBtn = findViewById(R.id.testBtn);
 
         tenderInput.setFocusable(true);
 
@@ -149,8 +155,8 @@ public class ComputationActivity extends BaseActivity implements
 
         String cardNum = myIntent.getStringExtra("cardNum");
         GLOBALS.getInstance().setCardNumber(cardNum);
-        String inputPlate= myIntent.getStringExtra("inputPlate");
-        String minsElapsed= myIntent.getStringExtra("minsElapsed");
+        String inputPlate = myIntent.getStringExtra("inputPlate");
+        String minsElapsed = myIntent.getStringExtra("minsElapsed");
 
         ca = new ComputeAPI(isDiscounted, TRType, daysElapsed, hrsRemaining, minsRemaining);
 
@@ -246,7 +252,7 @@ public class ComputationActivity extends BaseActivity implements
             computation4.setText(df2.format(ca.NetOfVAT - ca.discount) + "");
             computation5.setText(df2.format(ca.vat12) + "");
         }
-            amountDueTV.setText("P" + df2.format(ca.AmountDue));
+        amountDueTV.setText("P" + df2.format(ca.AmountDue));
 
         confirmBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -255,26 +261,34 @@ public class ComputationActivity extends BaseActivity implements
                 if (GLOBALS.getInstance().getDatetimeIN().length() > 0) {
                     if (GLOBALS.getInstance().isNewCard() == true) {
                         printOriginalReceipt();
+                        printOrigBTReceipt();
+                        String eJournal = getReceiptData();
+                        saveRec2Server(eJournal);
                     } else {
-                        printDuplicateReceipt();
+                        if (null == GLOBALS.getInstance().getMyOperation().getPrinter() || GLOBALS.getInstance().getMyOperation().getPrinter().isConnected() == false) {
+                            connClick();
+                        }
+                        printDuplicateBTReceipt();
                     }
                 }
 
             }
         });
 
-        testBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                //printText_test1();
-                printBTText("Hello. this is a test...");
-            }
-        });
+        //testBtn.setOnClickListener(new View.OnClickListener() {
+        //    @Override
+        //    public void onClick(View view) {
+        //        printText_test1();
+        //        printOrigBTReceipt();
+                //printBTText();
+        //    }
+        //});
 
         tenderInput.setInputType(InputType.TYPE_CLASS_NUMBER);
         tenderInput.addTextChangedListener(new TextWatcher() {
             double tender;
             double changeDue;
+
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
 
@@ -313,6 +327,28 @@ public class ComputationActivity extends BaseActivity implements
     }
 
     @Override
+    protected void onActivityResult(final int requestCode, int resultCode, final Intent data) {
+        switch (requestCode) {
+            case CONNECT_DEVICE:
+                if (resultCode == Activity.RESULT_OK) {
+                    GLOBALS.getInstance().getDialog().show();
+                    new Thread(new Runnable(){
+                        public void run() {
+                            GLOBALS.getInstance().getMyOperation().open(data);
+                        }
+                    }).start();
+                }
+                break;
+            case ENABLE_BT:
+                if (resultCode == Activity.RESULT_OK){
+                    GLOBALS.getInstance().getMyOperation().chooseDevice();
+                }else{
+                    Toast.makeText(this, R.string.bt_not_enabled, Toast.LENGTH_SHORT).show();
+                }
+        }
+    }
+
+    @Override
     public void onDeviceConnected(AidlDeviceService serviceManager) {
         deviceManager = serviceManager;
         try {
@@ -330,7 +366,7 @@ public class ComputationActivity extends BaseActivity implements
 
         try {
             Bundle bundle = new Bundle();
-            bundle.putInt("LED_ID",1);
+            bundle.putInt("LED_ID", 1);
             iLed = AidlLed.Stub.asInterface(serviceManager.getLed());
         } catch (RemoteException e) {
             e.printStackTrace();
@@ -345,7 +381,7 @@ public class ComputationActivity extends BaseActivity implements
 
     }
 
-    public void getPrintState(){
+    public void getPrintState() {
         try {
             int printState = printerDev.getPrinterState();
             //sendmessage(getStringByid(R.string.get_print_status) + printState);
@@ -357,7 +393,7 @@ public class ComputationActivity extends BaseActivity implements
 
     public void startbeep() {
         try {
-            iBeeper.beep(0,10000);
+            iBeeper.beep(0, 10000);
             //sendmessage(getStringByid(R.string.beep_start));
         } catch (RemoteException e) {
             e.printStackTrace();
@@ -373,8 +409,8 @@ public class ComputationActivity extends BaseActivity implements
         }
     }
 
-    private void initDialog(){
-        if(GLOBALS.getInstance().getDialog() != null && GLOBALS.getInstance().getDialog().isShowing()){
+    private void initDialog() {
+        if (GLOBALS.getInstance().getDialog() != null && GLOBALS.getInstance().getDialog().isShowing()) {
             GLOBALS.getInstance().getDialog().dismiss();
         }
 
@@ -387,12 +423,12 @@ public class ComputationActivity extends BaseActivity implements
         GLOBALS.getInstance().getDialog().setCanceledOnTouchOutside(false);
     }
 
-    private void connClick(){
-        if(GLOBALS.getInstance().isConnected()){
+    private void connClick() {
+        if (GLOBALS.getInstance().isConnected()) {
             //GLOBALS.getInstance().getMyOperation().close();
             //GLOBALS.getInstance().setMyOperation(null);
             //GLOBALS.getInstance().setmPrinter(null);
-        }else{
+        } else {
 
             new AlertDialog.Builder(context)
                     .setTitle(R.string.str_message)
@@ -415,13 +451,13 @@ public class ComputationActivity extends BaseActivity implements
         }
     }
 
-    private void openConn(){
+    private void openConn() {
         GLOBALS.getInstance().setMyOperation((IPrinterOperation) new BluetoothOperation(context, mHandler));
         //GLOBALS.getInstance().getMyOperation().btAutoConn(context,  mHandler);
 
     }
 
-    private void resetConn(){
+    private void resetConn() {
         GLOBALS.getInstance().setMyOperation((IPrinterOperation) new BluetoothOperation(context, mHandler));
         GLOBALS.getInstance().getMyOperation().chooseDevice();
 
@@ -442,14 +478,14 @@ public class ComputationActivity extends BaseActivity implements
                     Toast.makeText(context, R.string.yesconn, Toast.LENGTH_SHORT).show();
                     break;
                 case PrinterConstants.Connect.FAILED:
-                    if(myTask != null){
+                    if (myTask != null) {
                         myTask.cancel();
                     }
                     GLOBALS.getInstance().setIsConnected(false);
                     Toast.makeText(context, R.string.conn_failed, Toast.LENGTH_SHORT).show();
                     break;
                 case PrinterConstants.Connect.CLOSED:
-                    if(myTask != null){
+                    if (myTask != null) {
                         myTask.cancel();
                     }
                     GLOBALS.getInstance().setIsConnected(false);
@@ -504,10 +540,10 @@ public class ComputationActivity extends BaseActivity implements
 
     }
 
-    private class MyTask extends java.util.TimerTask{
+    private class MyTask extends java.util.TimerTask {
         @Override
         public void run() {
-            if(GLOBALS.getInstance().isConnected() && GLOBALS.getInstance().getmPrinter() != null) {
+            if (GLOBALS.getInstance().isConnected() && GLOBALS.getInstance().getmPrinter() != null) {
                 byte[] by = GLOBALS.getInstance().getmPrinter().read();
                 if (by != null) {
                     System.out.println(GLOBALS.getInstance().getmPrinter().isConnected() + " read byte " + Arrays.toString(by));
@@ -517,12 +553,12 @@ public class ComputationActivity extends BaseActivity implements
     }
 
     private void updateButtonState() {
-        if(!GLOBALS.getInstance().isConnected()){
+        if (!GLOBALS.getInstance().isConnected()) {
             //connectAddress.setText(R.string.no_conn_address);
             //connectState.setText(R.string.connect);
             //connectName.setText(R.string.no_conn_name);
-        }else{
-            if( bt_mac!=null && !bt_mac.equals("")){
+        } else {
+            if (bt_mac != null && !bt_mac.equals("")) {
                 //connectAddress.setText(getString(R.string.str_address)+ bt_mac);
                 //connectState.setText(R.string.disconnect);
                 //connectName.setText(getString(R.string.str_name)+bt_name);
@@ -532,13 +568,12 @@ public class ComputationActivity extends BaseActivity implements
 
     private void printOnly(String text, int fontSize, boolean isBold, PrintItemObj.ALIGN align) {
         obj2Print.clear();
-        obj2Print.add(new PrintItemObj(text, fontSize,isBold, align));
+        obj2Print.add(new PrintItemObj(text, fontSize, isBold, align));
         try {
             if (isLedOn) {
                 iLed.setLed(false);
                 isLedOn = false;
-            }
-            else {
+            } else {
                 iLed.setLed(true);
                 isLedOn = true;
             }
@@ -548,14 +583,13 @@ public class ComputationActivity extends BaseActivity implements
     }
 
     private void printNsave(String text, int fontSize, boolean isBold, PrintItemObj.ALIGN align) {
-       obj2Print.add(new PrintItemObj(text, fontSize,isBold, align));
-       rec.appendToFile(text);
+        obj2Print.add(new PrintItemObj(text, fontSize, isBold, align));
+        rec.appendToFile(text);
         try {
             if (isLedOn) {
                 iLed.setLed(false);
                 isLedOn = false;
-            }
-            else {
+            } else {
                 iLed.setLed(true);
                 isLedOn = true;
             }
@@ -564,11 +598,17 @@ public class ComputationActivity extends BaseActivity implements
         }
     }
 
-    public void printText_test1()
-    {
+    private void saveRec2Server(String text2bwritten) {
+        DBHelper dbh = new DBHelper(getApplicationContext());
+        HttpHandler sh = new HttpHandler(dbh);
+        sh.saveRawText2Server(SERVER_NAME + "/general/write2server.php?terminalID="+CONSTANTS.getInstance().getExitID()+"&rawText=", text2bwritten);
+
+    }
+
+    public void printText_test1() {
         try {
             this.printerDev.setPrinterGray(4);
-            printerDev.printText(new ArrayList<PrintItemObj>(){
+            printerDev.printText(new ArrayList<PrintItemObj>() {
                 {
                     //add(new PrintItemObj("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT));
 
@@ -585,30 +625,30 @@ public class ComputationActivity extends BaseActivity implements
 //                    add(new PrintItemObj("",PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT));
 //                    add(new PrintItemObj("",PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT));
 
-                    add(new PrintItemObj("Quittung       27.02.2018 12:01",PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT));
-                    add(new PrintItemObj("",PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT));
-                    add(new PrintItemObj("Fahrzeug: RA-SE 907",PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT));
-                    add(new PrintItemObj("Ordnungs-Nr:907",PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT));
-                    add(new PrintItemObj("Fanrer:   Peters Rolf",PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT));
-                    add(new PrintItemObj("TAID:     18000000015",PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT));
-                    add(new PrintItemObj("Name:",PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT));
-                    add(new PrintItemObj("Name",PrinterConstant.FontSize.SMALL,false, PrintItemObj.ALIGN.LEFT));
-                    add(new PrintItemObj("Name",PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT));
-                    add(new PrintItemObj("name",PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT));
-                    add(new PrintItemObj("------------------------------------------",PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT));
-                    add(new PrintItemObj("Von:",PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT));
-                    add(new PrintItemObj("------------------------------------------",PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT));
-                    add(new PrintItemObj("Nach:",PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT));
-                    add(new PrintItemObj("------------------------------------------",PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT));
+                    add(new PrintItemObj("Quittung       27.02.2018 12:01", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT));
+                    add(new PrintItemObj("", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT));
+                    add(new PrintItemObj("Fahrzeug: RA-SE 907", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT));
+                    add(new PrintItemObj("Ordnungs-Nr:907", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT));
+                    add(new PrintItemObj("Fanrer:   Peters Rolf", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT));
+                    add(new PrintItemObj("TAID:     18000000015", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT));
+                    add(new PrintItemObj("Name:", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT));
+                    add(new PrintItemObj("Name", PrinterConstant.FontSize.SMALL, false, PrintItemObj.ALIGN.LEFT));
+                    add(new PrintItemObj("Name", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT));
+                    add(new PrintItemObj("name", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT));
+                    add(new PrintItemObj("------------------------------------------", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT));
+                    add(new PrintItemObj("Von:", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT));
+                    add(new PrintItemObj("------------------------------------------", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT));
+                    add(new PrintItemObj("Nach:", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT));
+                    add(new PrintItemObj("------------------------------------------", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT));
 
-                    add(new PrintItemObj("Total:    9,00 EUR",PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT));
-                    add(new PrintItemObj("MwST  7%:  0,59 EUR(enth.)",PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT));
-                    add(new PrintItemObj("MwST.  7%:  0,59 EUR(enth.)",PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT));
-                    add(new PrintItemObj("",PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT));
-                    add(new PrintItemObj("",PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT));
-                    add(new PrintItemObj("",PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT));
-                    add(new PrintItemObj("",PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT));
-                    add(new PrintItemObj("",PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT));
+                    add(new PrintItemObj("Total:    9,00 EUR", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT));
+                    add(new PrintItemObj("MwST  7%:  0,59 EUR(enth.)", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT));
+                    add(new PrintItemObj("MwST.  7%:  0,59 EUR(enth.)", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT));
+                    add(new PrintItemObj("", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT));
+                    add(new PrintItemObj("", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT));
+                    add(new PrintItemObj("", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT));
+                    add(new PrintItemObj("", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT));
+                    add(new PrintItemObj("", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT));
 
                 }
             }, new AidlPrinterListener.Stub() {
@@ -630,167 +670,338 @@ public class ComputationActivity extends BaseActivity implements
         }
     }
 
+    public String getReceiptData() {
+        String rawReceipt = "";
+        rawReceipt = "  CHINESE GENERAL HOSPITAL MEDICAL CTR$";
+        rawReceipt = rawReceipt + "286 BLUMENTRITT ST. STA. CRUZ MANILA$";
+        rawReceipt = rawReceipt + "     " + CONSTANTS.getInstance().getREGTIN() + "$";
+        rawReceipt = rawReceipt + "        " + CONSTANTS.getInstance().getMIN() + "$";
+        rawReceipt = rawReceipt + "  " + CONSTANTS.getInstance().getPTU() + "$";
 
-    public void printDuplicateReceipt()
-    {
+        rawReceipt = rawReceipt +"OFFICIAL RECEIPT" + "$";
+        rawReceipt = rawReceipt +"CUSTOMER COPY" + "$";
+        rawReceipt = rawReceipt +"RECEIPT NUM. : " + RECEIPT.getInstance().getReceiptNum() + "$";
+        rawReceipt = rawReceipt +"" + "$";
+        rawReceipt = rawReceipt +"Ent ID.      : " + RECEIPT.getInstance().getEntID() + "$";
+        rawReceipt = rawReceipt +"Cashier Name : " + RECEIPT.getInstance().getCashierName() + "$";
+        rawReceipt = rawReceipt +"Location     : " + RECEIPT.getInstance().getExitID() + "$";
+        rawReceipt = rawReceipt +"Plate Number : " + RECEIPT.getInstance().getPlateNum() + "$";
+        rawReceipt = rawReceipt +"Parker Type  : " + RECEIPT.getInstance().getpTypeName() + "$";
+        String dtIN = RECEIPT.getInstance().getDatetimeIN().substring(0, RECEIPT.getInstance().getDatetimeIN().length() - 3);
+        String dtOUT = RECEIPT.getInstance().getDatetimeOUT().substring(0, RECEIPT.getInstance().getDatetimeOUT().length() - 3);
+        rawReceipt = rawReceipt +"TIME IN      : " + dtIN + "$";
+        rawReceipt = rawReceipt +"TIME OUT     : " + dtOUT + "$";
+        rawReceipt = rawReceipt +"Duration     : " + RECEIPT.getInstance().getDuration() + "$";
+        rawReceipt = rawReceipt +"" + "$";
+            rawReceipt = rawReceipt +"GROSS AMOUNT        " + df2.format(RECEIPT.getInstance().getAmountGrossDbl()) + "$";
+        if (RECEIPT.getInstance().isDiscounted()) {
+            rawReceipt = rawReceipt +"LESS: VAT           " + df2.format(RECEIPT.getInstance().getVat12Dbl()) + "$";
+            rawReceipt = rawReceipt +"NET OF VAT          " + df2.format(RECEIPT.getInstance().getNetOfVATDbl()) + "$";
+            rawReceipt = rawReceipt +"LESS DSC            " + df2.format(RECEIPT.getInstance().getDiscountDbl()) + "$";
+            rawReceipt = rawReceipt +"NET OF DSC          " + df2.format(RECEIPT.getInstance().getNetOfDiscountDbl()) + "$";
+            rawReceipt = rawReceipt +"ADD VAT             " + df2.format(RECEIPT.getInstance().getVat12Dbl()) + "$";
+        } else if (isDiscounted == false) {
+            rawReceipt = rawReceipt +"VATable Sales       " + df2.format(RECEIPT.getInstance().getVatsaleDbl()) + "$";
+            rawReceipt = rawReceipt +"VAT Amt(12%)        " + df2.format(RECEIPT.getInstance().getVat12Dbl()) + "$";
+            rawReceipt = rawReceipt +"VAT Exempt          " + "0.00" + "$";
+            rawReceipt = rawReceipt +"Zero-Rated          " + "0.00" + "$";
+        }
+        rawReceipt = rawReceipt +"------------------------------------------" + "$";
+        rawReceipt = rawReceipt +"TOTAL AMOUNT DUE: " + df2.format(RECEIPT.getInstance().getAmountDueDbl()) + "$";
+        rawReceipt = rawReceipt +"------------------------------------------" + "$";
+        rawReceipt = rawReceipt +"***** CUSTOMER INFO *****" + "$";
+        rawReceipt = rawReceipt +"Customer Name:____________________________" + "$";
+        rawReceipt = rawReceipt +"Addr:_____________________________________" + "$";
+        rawReceipt = rawReceipt +"TIN :_____________________________________" + "$";
+        rawReceipt = rawReceipt +"Business Type:____________________________" + "$";
+
+        rawReceipt = rawReceipt +"please visit" + "$";
+        rawReceipt = rawReceipt +"www.theoretics.com.ph" + "$";
+        rawReceipt = rawReceipt +"PARKING POS SUPPLIER" + "$";
+        rawReceipt = rawReceipt +"APPLIED MODERN THEORETICS INC." + "$";
+        rawReceipt = rawReceipt +"ACCRED: 0470083988742019071113" + "$";
+        rawReceipt = rawReceipt +"Date Issued: 02/05/2020" + "$";
+        rawReceipt = rawReceipt +"Valid Until: 02/05/2025" + "$";
+        rawReceipt = rawReceipt +CONSTANTS.getInstance().getPTU() + "$";
+        rawReceipt = rawReceipt +"Date Issued: 03/03/2020" + "$";
+        rawReceipt = rawReceipt +"Valid Until: 03/03/2025" + "$";
+        rawReceipt = rawReceipt +"THANK YOU. FOR PARKING" + "$";
+
+        rawReceipt = rawReceipt +"$";
+        rawReceipt = rawReceipt +"$";
+        rawReceipt = rawReceipt +"$";
+
+        return rawReceipt;
+    }
+
+    public void printOrigBTReceipt() {
+        new Thread() {
+            @Override
+            public void run() {
+
+            }
+
+        }.start();
+        int SMALLFONT = 20;
+        int NORMALFONT = 30;
+        PrintUtils.printBTHeader(context.getResources());
+        PrintUtils.printBTText("       OFFICIAL RECEIPT", NORMALFONT, false, 1);
+        PrintUtils.printBTText("         CUSTOMER COPY\n", NORMALFONT, false, 1);
+        PrintUtils.printBTText("RECEIPT NUM. : " + RECEIPT.getInstance().getReceiptNum(), NORMALFONT, false, 0);
+        PrintUtils.printBTText("", NORMALFONT, false, 0);
+        PrintUtils.printBTText("Ent ID.      : " + RECEIPT.getInstance().getEntID(), NORMALFONT, false, 0);
+        PrintUtils.printBTText("Cashier Name : " + RECEIPT.getInstance().getCashierName(), NORMALFONT, false, 0);
+        PrintUtils.printBTText("Location     : " + RECEIPT.getInstance().getExitID(), NORMALFONT, false, 0);
+        PrintUtils.printBTText("Plate Number : " + RECEIPT.getInstance().getPlateNum(), NORMALFONT, false, 0);
+        PrintUtils.printBTText("Parker Type  : " + RECEIPT.getInstance().getpTypeName(), NORMALFONT, false, 0);
+        String dtIN = RECEIPT.getInstance().getDatetimeIN().substring(0, RECEIPT.getInstance().getDatetimeIN().length() - 3);
+        String dtOUT = RECEIPT.getInstance().getDatetimeOUT().substring(0, RECEIPT.getInstance().getDatetimeOUT().length() - 3);
+        PrintUtils.printBTText("TIME IN      : " + dtIN, NORMALFONT, false, 0);
+        PrintUtils.printBTText("TIME OUT     : " + dtOUT, NORMALFONT, false, 0);
+        PrintUtils.printBTText("Duration     : " + RECEIPT.getInstance().getDuration(), NORMALFONT, false, 0);
+        PrintUtils.printBTText("", NORMALFONT, false, 0);
+            PrintUtils.printBTText("GROSS AMOUNT        " + df2.format(RECEIPT.getInstance().getAmountGrossDbl()), PrinterConstant.FontSize.LARGE, false, 0);
+        if (RECEIPT.getInstance().isDiscounted()) {
+            PrintUtils.printBTText("LESS: VAT           " + df2.format(RECEIPT.getInstance().getVat12Dbl()), NORMALFONT, false, 0);
+            PrintUtils.printBTText("NET OF VAT          " + df2.format(RECEIPT.getInstance().getNetOfVATDbl()), NORMALFONT, false, 0);
+            PrintUtils.printBTText("LESS DSC            " + df2.format(RECEIPT.getInstance().getDiscountDbl()), NORMALFONT, false, 0);
+            PrintUtils.printBTText("NET OF DSC          " + df2.format(RECEIPT.getInstance().getNetOfDiscountDbl()), NORMALFONT, false, 0);
+            PrintUtils.printBTText("ADD VAT             " + df2.format(RECEIPT.getInstance().getVat12Dbl()), NORMALFONT, false, 0);
+        } else if (isDiscounted == false) {
+            PrintUtils.printBTText("VATable Sales       " + df2.format(RECEIPT.getInstance().getVatsaleDbl()), NORMALFONT, false, 0);
+            PrintUtils.printBTText("VAT Amt(12%)        " + df2.format(RECEIPT.getInstance().getVat12Dbl()), NORMALFONT, false, 0);
+            PrintUtils.printBTText("VAT Exempt          " + "0.00", NORMALFONT, false, 0);
+            PrintUtils.printBTText("Zero-Rated          " + "0.00", NORMALFONT, false, 0);
+        }
+        PrintUtils.printBTText("-------------------------------", SMALLFONT, false, 1);
+        PrintUtils.printBTText("TOTAL AMOUNT DUE: " + df2.format(RECEIPT.getInstance().getAmountDueDbl()), PrinterConstant.FontSize.LARGE, true, 1);
+        PrintUtils.printBTText("-------------------------------", SMALLFONT, false, 1);
+        PrintUtils.printBTText("***** CUSTOMER INFO *****", SMALLFONT, false, 1);
+        PrintUtils.printBTText("Customer Name:_________________", SMALLFONT, false, 0);
+        PrintUtils.printBTText("Addr:__________________________", SMALLFONT, false, 0);
+        PrintUtils.printBTText("TIN :__________________________", SMALLFONT, false, 0);
+        PrintUtils.printBTText("Business Type:_________________", SMALLFONT, false, 0);
+
+        PrintUtils.printBTFooter(context.getResources());
+        /*
+        PrintUtils.printBTText("please visit", SMALLFONT, false, 1);
+        PrintUtils.printBTText("www.theoretics.com.ph", SMALLFONT, false, 1);
+        PrintUtils.printBTText("PARKING POS SUPPLIER", SMALLFONT, false, 1);
+        PrintUtils.printBTText("APPLIED MODERN THEORETICS INC.", SMALLFONT, false, 1);
+        PrintUtils.printBTText("ACCRED: 0470083988742019071113", SMALLFONT, false, 1);
+        PrintUtils.printBTText("Date Issued: 02/05/2020", SMALLFONT, false, 1);
+        PrintUtils.printBTText("Valid Until: 02/05/2025", SMALLFONT, false, 1);
+        PrintUtils.printBTText(CONSTANTS.getInstance().getPTU(), SMALLFONT, false, 1);
+        PrintUtils.printBTText("Date Issued: 03/03/2020", SMALLFONT, false, 1);
+        PrintUtils.printBTText("Valid Until: 03/03/2025", SMALLFONT, false, 1);
+        PrintUtils.printBTText("THANK YOU. FOR PARKING", SMALLFONT, false, 1);
+        */
+
+        PrintUtils.printBTText("", NORMALFONT, false, 0);
+        PrintUtils.printBTText("", NORMALFONT, false, 0);
+        PrintUtils.printBTText("", NORMALFONT, false, 0);
+
+
+    }
+
+    public void printDuplicateBTReceipt() {
+        new Thread() {
+            @Override
+            public void run() {
+
+            }
+
+        }.start();
+        int SMALLFONT = 20;
+        int NORMALFONT = 30;
+        PrintUtils.printBTHeader(context.getResources());
+        PrintUtils.printBTText("\n      *** REPRINT ***\n", NORMALFONT, false, 1);
+        PrintUtils.printBTText("       OFFICIAL RECEIPT", NORMALFONT, false, 1);
+        PrintUtils.printBTText("         CUSTOMER COPY\n", NORMALFONT, false, 1);
+        PrintUtils.printBTText("RECEIPT NUM. : " + RECEIPT.getInstance().getReceiptNum(), NORMALFONT, false, 0);
+        PrintUtils.printBTText("Ent ID.      : " + RECEIPT.getInstance().getEntID(), NORMALFONT, false, 0);
+        PrintUtils.printBTText("Cashier Name : " + RECEIPT.getInstance().getCashierName(), NORMALFONT, false, 0);
+        PrintUtils.printBTText("Location     : " + RECEIPT.getInstance().getExitID(), NORMALFONT, false, 0);
+        PrintUtils.printBTText("Plate Number : " + RECEIPT.getInstance().getPlateNum(), NORMALFONT, false, 0);
+        PrintUtils.printBTText("Parker Type  : " + RECEIPT.getInstance().getpTypeName(), NORMALFONT, false, 0);
+        String dtIN = RECEIPT.getInstance().getDatetimeIN().substring(0, RECEIPT.getInstance().getDatetimeIN().length() - 3);
+        String dtOUT = RECEIPT.getInstance().getDatetimeOUT().substring(0, RECEIPT.getInstance().getDatetimeOUT().length() - 3);
+        PrintUtils.printBTText("TIME IN      : " + dtIN, NORMALFONT, false, 0);
+        PrintUtils.printBTText("TIME OUT     : " + dtOUT, NORMALFONT, false, 0);
+        PrintUtils.printBTText("Duration     : " + RECEIPT.getInstance().getDuration(), NORMALFONT, false, 0);
+        PrintUtils.printBTText("", NORMALFONT, false, 0);
+            PrintUtils.printBTText("GROSS AMOUNT        " + RECEIPT.getInstance().getAmountGross(), PrinterConstant.FontSize.LARGE, false, 0);
+        if (RECEIPT.getInstance().isDiscounted()) {
+            PrintUtils.printBTText("LESS: VAT           " + df2.format(RECEIPT.getInstance().getVat12Dbl()), NORMALFONT, false, 0);
+            PrintUtils.printBTText("NET OF VAT          " + df2.format(RECEIPT.getInstance().getNetOfVATDbl()), NORMALFONT, false, 0);
+            PrintUtils.printBTText("LESS DSC            " + df2.format(RECEIPT.getInstance().getDiscountDbl()), NORMALFONT, false, 0);
+            PrintUtils.printBTText("NET OF DSC          " + df2.format(RECEIPT.getInstance().getNetOfDiscountDbl()), NORMALFONT, false, 0);
+            PrintUtils.printBTText("ADD VAT             " + df2.format(RECEIPT.getInstance().getVat12Dbl()), NORMALFONT, false, 0);
+        } else if (isDiscounted == false) {
+            PrintUtils.printBTText("VATable Sales       " + df2.format(RECEIPT.getInstance().getVatsaleDbl()), NORMALFONT, false, 0);
+            PrintUtils.printBTText("VAT Amt(12%)        " + df2.format(RECEIPT.getInstance().getVat12Dbl()), NORMALFONT, false, 0);
+            PrintUtils.printBTText("VAT Exempt          " + "0.00", NORMALFONT, false, 0);
+            PrintUtils.printBTText("Zero-Rated          " + "0.00", NORMALFONT, false, 0);
+        }
+        PrintUtils.printBTText("-------------------------------", SMALLFONT, false, 1);
+        PrintUtils.printBTText("TOTAL AMOUNT DUE: " + df2.format(RECEIPT.getInstance().getAmountDueDbl()), PrinterConstant.FontSize.LARGE, true, 1);
+        PrintUtils.printBTText("-------------------------------", SMALLFONT, false, 1);
+        PrintUtils.printBTText("***** CUSTOMER INFO *****", SMALLFONT, false, 1);
+        PrintUtils.printBTText("Customer Name:_________________", SMALLFONT, false, 0);
+        PrintUtils.printBTText("Addr:__________________________", SMALLFONT, false, 0);
+        PrintUtils.printBTText("TIN :__________________________", SMALLFONT, false, 0);
+        PrintUtils.printBTText("Business Type:_________________", SMALLFONT, false, 0);
+
+        PrintUtils.printBTFooter(context.getResources());
+        /*
+        PrintUtils.printBTText("please visit", SMALLFONT, false, 1);
+        PrintUtils.printBTText("www.theoretics.com.ph", SMALLFONT, false, 1);
+        PrintUtils.printBTText("PARKING POS SUPPLIER", SMALLFONT, false, 1);
+        PrintUtils.printBTText("APPLIED MODERN THEORETICS INC.", SMALLFONT, false, 1);
+        PrintUtils.printBTText("ACCRED: 0470083988742019071113", SMALLFONT, false, 1);
+        PrintUtils.printBTText("Date Issued: 02/05/2020", SMALLFONT, false, 1);
+        PrintUtils.printBTText("Valid Until: 02/05/2025", SMALLFONT, false, 1);
+        PrintUtils.printBTText(CONSTANTS.getInstance().getPTU(), SMALLFONT, false, 1);
+        PrintUtils.printBTText("Date Issued: 03/03/2020", SMALLFONT, false, 1);
+        PrintUtils.printBTText("Valid Until: 03/03/2025", SMALLFONT, false, 1);
+        PrintUtils.printBTText("THANK YOU. FOR PARKING", SMALLFONT, false, 1);
+        */
+
+        PrintUtils.printBTText("", NORMALFONT, false, 0);
+        PrintUtils.printBTText("", NORMALFONT, false, 0);
+        PrintUtils.printBTText("", NORMALFONT, false, 0);
+
+
+    }
+
+    public void printDuplicateReceipt() {
         try {
             this.printerDev.setPrinterGray(12);
-            printOnly("CHINESE GENERAL HOSPITAL MEDICAL CTR", PrinterConstant.FontSize.SMALL,true, PrintItemObj.ALIGN.CENTER);
-            printOnly("286 BLUMENTRITT ST. STA. CRUZ MANILA", PrinterConstant.FontSize.SMALL,true, PrintItemObj.ALIGN.CENTER);
-            printOnly(CONSTANTS.getInstance().getREGTIN(), PrinterConstant.FontSize.SMALL,true, PrintItemObj.ALIGN.CENTER);
-            printOnly(CONSTANTS.getInstance().getMIN(),PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.CENTER);
-            printOnly(CONSTANTS.getInstance().getPTU(),PrinterConstant.FontSize.SMALL,false, PrintItemObj.ALIGN.CENTER);
-            printOnly("OFFICIAL RECEIPT",PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.CENTER);
-            printOnly("ACCOUNTING COPY",PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.CENTER);
-            printOnly("RECEIPT NUM. : " + RECEIPT.getInstance().getReceiptNum(),PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT);
-            printOnly("",PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT);
-                printOnly("Ent ID.      : " + RECEIPT.getInstance().getEntID(),PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT);
-                printOnly("Cashier Name : " + RECEIPT.getInstance().getCashierName(),PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT);
-                printOnly("Location     : " + RECEIPT.getInstance().getExitID(),PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT);
-                printOnly("Plate Number : " + RECEIPT.getInstance().getPlateNum(),PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT);
-                printOnly("Parker Type  : " + RECEIPT.getInstance().getpTypeName(),PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT);
-                String dtIN = RECEIPT.getInstance().getDatetimeIN().substring(0,RECEIPT.getInstance().getDatetimeIN().length() - 3);
-                String dtOUT = RECEIPT.getInstance().getDatetimeOUT().substring(0,RECEIPT.getInstance().getDatetimeOUT().length() - 3);
-                printOnly("TIME IN      : " + dtIN,PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT);
-                printOnly("TIME OUT     : " + dtOUT,PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT);
-                printOnly("Duration     : " + RECEIPT.getInstance().getDuration(),PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT);
-                printOnly("",PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT);
-                printOnly("GROSS AMOUNT      " + RECEIPT.getInstance().getAmountGross(),PrinterConstant.FontSize.LARGE,false, PrintItemObj.ALIGN.LEFT);
+            printOnly("CHINESE GENERAL HOSPITAL MEDICAL CTR", PrinterConstant.FontSize.SMALL, true, PrintItemObj.ALIGN.CENTER);
+            printOnly("286 BLUMENTRITT ST. STA. CRUZ MANILA", PrinterConstant.FontSize.SMALL, true, PrintItemObj.ALIGN.CENTER);
+            printOnly(CONSTANTS.getInstance().getREGTIN(), PrinterConstant.FontSize.SMALL, true, PrintItemObj.ALIGN.CENTER);
+            printOnly(CONSTANTS.getInstance().getMIN(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.CENTER);
+            printOnly(CONSTANTS.getInstance().getPTU(), PrinterConstant.FontSize.SMALL, false, PrintItemObj.ALIGN.CENTER);
+            printOnly("OFFICIAL RECEIPT", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.CENTER);
+            printOnly("ACCOUNTING COPY", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.CENTER);
+            printOnly("RECEIPT NUM. : " + RECEIPT.getInstance().getReceiptNum(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+            printOnly("", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+            printOnly("Ent ID.      : " + RECEIPT.getInstance().getEntID(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+            printOnly("Cashier Name : " + RECEIPT.getInstance().getCashierName(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+            printOnly("Location     : " + RECEIPT.getInstance().getExitID(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+            printOnly("Plate Number : " + RECEIPT.getInstance().getPlateNum(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+            printOnly("Parker Type  : " + RECEIPT.getInstance().getpTypeName(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+            String dtIN = RECEIPT.getInstance().getDatetimeIN().substring(0, RECEIPT.getInstance().getDatetimeIN().length() - 3);
+            String dtOUT = RECEIPT.getInstance().getDatetimeOUT().substring(0, RECEIPT.getInstance().getDatetimeOUT().length() - 3);
+            printOnly("TIME IN      : " + dtIN, PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+            printOnly("TIME OUT     : " + dtOUT, PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+            printOnly("Duration     : " + RECEIPT.getInstance().getDuration(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+            printOnly("", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+                printOnly("GROSS AMOUNT        " + df2.format(RECEIPT.getInstance().getAmountGrossDbl()), PrinterConstant.FontSize.LARGE, false, PrintItemObj.ALIGN.LEFT);
             if (RECEIPT.getInstance().isDiscounted()) {
-                printOnly("LESS: VAT           " + RECEIPT.getInstance().getVat12(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
-                printOnly("NET OF VAT          " + RECEIPT.getInstance().getNetOfVAT(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
-                printOnly("LESS DSC            " + RECEIPT.getInstance().getDiscount(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
-                printOnly("NET OF DSC          " + RECEIPT.getInstance().getNetOfDiscount(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
-                printOnly("ADD VAT             " + RECEIPT.getInstance().getVat12(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
-            } else if (isDiscounted == false){
-                printOnly("VATable Sales       " + RECEIPT.getInstance().getVatsale(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
-                printOnly("VAT Amt(12%)        " + RECEIPT.getInstance().getVat12(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+                printOnly("LESS: VAT           " + df2.format(RECEIPT.getInstance().getVat12Dbl()), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+                printOnly("NET OF VAT          " + df2.format(RECEIPT.getInstance().getNetOfVATDbl()), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+                printOnly("LESS DSC            " + df2.format(RECEIPT.getInstance().getDiscountDbl()), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+                printOnly("NET OF DSC          " + df2.format(RECEIPT.getInstance().getNetOfDiscountDbl()), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+                printOnly("ADD VAT             " + df2.format(RECEIPT.getInstance().getVat12Dbl()), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+            } else if (isDiscounted == false) {
+                printOnly("VATable Sales       " + df2.format(RECEIPT.getInstance().getVatsaleDbl()), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+                printOnly("VAT Amt(12%)        " + df2.format(RECEIPT.getInstance().getVat12Dbl()), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
                 printOnly("VAT Exempt          " + "0.00", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
                 printOnly("Zero-Rated          " + "0.00", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
             }
-            printOnly("------------------------------------------",PrinterConstant.FontSize.SMALL,false, PrintItemObj.ALIGN.CENTER);
-            printOnly("TOTAL AMOUNT DUE: " + RECEIPT.getInstance().getAmountDue(),PrinterConstant.FontSize.LARGE,true, PrintItemObj.ALIGN.CENTER);
-            printOnly("------------------------------------------",PrinterConstant.FontSize.SMALL,false, PrintItemObj.ALIGN.CENTER);
-            printOnly("***** CUSTOMER INFO *****",PrinterConstant.FontSize.SMALL,false, PrintItemObj.ALIGN.CENTER);
-            printOnly("Customer Name:____________________________",PrinterConstant.FontSize.SMALL,false, PrintItemObj.ALIGN.LEFT);
-            printOnly("Addr:_____________________________________",PrinterConstant.FontSize.SMALL,false, PrintItemObj.ALIGN.LEFT);
-            printOnly("TIN :_____________________________________",PrinterConstant.FontSize.SMALL,false, PrintItemObj.ALIGN.LEFT);
-            printOnly("Business Type:____________________________",PrinterConstant.FontSize.SMALL,false, PrintItemObj.ALIGN.LEFT);
+            printOnly("------------------------------------------", PrinterConstant.FontSize.SMALL, false, PrintItemObj.ALIGN.CENTER);
+            printOnly("TOTAL AMOUNT DUE: " + df2.format(RECEIPT.getInstance().getAmountDueDbl()), PrinterConstant.FontSize.LARGE, true, PrintItemObj.ALIGN.CENTER);
+            printOnly("------------------------------------------", PrinterConstant.FontSize.SMALL, false, PrintItemObj.ALIGN.CENTER);
+            printOnly("***** CUSTOMER INFO *****", PrinterConstant.FontSize.SMALL, false, PrintItemObj.ALIGN.CENTER);
+            printOnly("Customer Name:____________________________", PrinterConstant.FontSize.SMALL, false, PrintItemObj.ALIGN.LEFT);
+            printOnly("Addr:_____________________________________", PrinterConstant.FontSize.SMALL, false, PrintItemObj.ALIGN.LEFT);
+            printOnly("TIN :_____________________________________", PrinterConstant.FontSize.SMALL, false, PrintItemObj.ALIGN.LEFT);
+            printOnly("Business Type:____________________________", PrinterConstant.FontSize.SMALL, false, PrintItemObj.ALIGN.LEFT);
 
-            printOnly("please visit",PrinterConstant.FontSize.SMALL,false, PrintItemObj.ALIGN.CENTER);
-            printOnly("www.theoretics.com.ph",PrinterConstant.FontSize.SMALL,false, PrintItemObj.ALIGN.CENTER);
-            printOnly("PARKING POS SUPPLIER",PrinterConstant.FontSize.SMALL,false, PrintItemObj.ALIGN.CENTER);
-            printOnly("APPLIED MODERN THEORETICS INC.",PrinterConstant.FontSize.SMALL,false, PrintItemObj.ALIGN.CENTER);
-            printOnly("ACCRED: 0470083988742019071113",PrinterConstant.FontSize.SMALL,false, PrintItemObj.ALIGN.CENTER);
-            printOnly("Date Issued: 02/05/2020",PrinterConstant.FontSize.SMALL,false, PrintItemObj.ALIGN.CENTER);
-            printOnly("Valid Until: 02/05/2025",PrinterConstant.FontSize.SMALL,false, PrintItemObj.ALIGN.CENTER);
-            printOnly(CONSTANTS.getInstance().getPTU(),PrinterConstant.FontSize.SMALL,false, PrintItemObj.ALIGN.CENTER);
-            printOnly("Date Issued: 03/03/2020",PrinterConstant.FontSize.SMALL,false, PrintItemObj.ALIGN.CENTER);
-            printOnly("Valid Until: 03/03/2025",PrinterConstant.FontSize.SMALL,false, PrintItemObj.ALIGN.CENTER);
-            printOnly("THANK YOU. FOR PARKING",PrinterConstant.FontSize.SMALL,false, PrintItemObj.ALIGN.CENTER);
+            printOnly("please visit", PrinterConstant.FontSize.SMALL, false, PrintItemObj.ALIGN.CENTER);
+            printOnly("www.theoretics.com.ph", PrinterConstant.FontSize.SMALL, false, PrintItemObj.ALIGN.CENTER);
+            printOnly("PARKING POS SUPPLIER", PrinterConstant.FontSize.SMALL, false, PrintItemObj.ALIGN.CENTER);
+            printOnly("APPLIED MODERN THEORETICS INC.", PrinterConstant.FontSize.SMALL, false, PrintItemObj.ALIGN.CENTER);
+            printOnly("ACCRED: 0470083988742019071113", PrinterConstant.FontSize.SMALL, false, PrintItemObj.ALIGN.CENTER);
+            printOnly("Date Issued: 02/05/2020", PrinterConstant.FontSize.SMALL, false, PrintItemObj.ALIGN.CENTER);
+            printOnly("Valid Until: 02/05/2025", PrinterConstant.FontSize.SMALL, false, PrintItemObj.ALIGN.CENTER);
+            printOnly(CONSTANTS.getInstance().getPTU(), PrinterConstant.FontSize.SMALL, false, PrintItemObj.ALIGN.CENTER);
+            printOnly("Date Issued: 03/03/2020", PrinterConstant.FontSize.SMALL, false, PrintItemObj.ALIGN.CENTER);
+            printOnly("Valid Until: 03/03/2025", PrinterConstant.FontSize.SMALL, false, PrintItemObj.ALIGN.CENTER);
+            printOnly("THANK YOU. FOR PARKING", PrinterConstant.FontSize.SMALL, false, PrintItemObj.ALIGN.CENTER);
 
-            printOnly("",PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT);
-            printOnly("",PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT);
-            printOnly("",PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT);
-
-            printerDev.printText(obj2Print, new AidlPrinterListener.Stub() {
-
-                @Override
-                public void onPrintFinish() throws RemoteException {
-                    //String endTime = getCurTime();
-                    //sendmessage(getStringByid(R.string.print_end) + endTime);
-                    try {
-                        if (isLedOn) {
-                            iLed.setLed(false);
-                            isLedOn = false;
-                        }
-                    } catch (RemoteException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-                @Override
-                public void onError(int arg0) throws RemoteException {
-                    //sendmessage(getStringByid(R.string.print_faile_errcode) + arg0);
-                    try {
-                        if (isLedOn) {
-                            iLed.setLed(false);
-                            isLedOn = false;
-                        }
-                    } catch (RemoteException e) {
-                        e.printStackTrace();
-                    }
-                }
-            });
+            printOnly("", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+            printOnly("", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+            printOnly("", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
 
         } catch (RemoteException e) {
             e.printStackTrace();
         }
     }
 
-    public void printOriginalReceipt()
-    {
+    public void printOriginalReceipt() {
         String recNum = getReceiptNumber();
         saveReceipt2Memory(recNum);
         try {
             this.printerDev.setPrinterGray(12);
-            printNsave("CHINESE GENERAL HOSPITAL MEDICAL CTR", PrinterConstant.FontSize.SMALL,true, PrintItemObj.ALIGN.CENTER);
-            printNsave("286 BLUMENTRITT ST. STA. CRUZ MANILA", PrinterConstant.FontSize.SMALL,true, PrintItemObj.ALIGN.CENTER);
-            printNsave(CONSTANTS.getInstance().getREGTIN(), PrinterConstant.FontSize.SMALL,true, PrintItemObj.ALIGN.CENTER);
-            printNsave(CONSTANTS.getInstance().getMIN(),PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.CENTER);
-            printNsave(CONSTANTS.getInstance().getPTU(),PrinterConstant.FontSize.SMALL,false, PrintItemObj.ALIGN.CENTER);
-            printNsave("OFFICIAL RECEIPT",PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.CENTER);
-            printNsave("CUSTOMER COPY",PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.CENTER);
-            printNsave("RECEIPT NUM. : " + recNum,PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT);
-            printNsave("",PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT);
-            printNsave("Ent ID.      : " + GLOBALS.getInstance().getEntID(),PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT);
-            printNsave("Cashier Name : " + GLOBALS.getInstance().getCashierName(),PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT);
-            printNsave("Location     : " + CONSTANTS.getInstance().getExitID(),PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT);
-            printNsave("Plate Number : " + GLOBALS.getInstance().getPlateNum(),PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT);
-            printNsave("Parker Type  : " + GLOBALS.getInstance().getpTypeName(),PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT);
-            String dtIN = RECEIPT.getInstance().getDatetimeIN().substring(0,RECEIPT.getInstance().getDatetimeIN().length() - 3);
-            String dtOUT = RECEIPT.getInstance().getDatetimeOUT().substring(0,RECEIPT.getInstance().getDatetimeOUT().length() - 3);
-            printNsave("TIME IN      : " + dtIN,PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT);
-            printNsave("TIME OUT     : " + dtOUT,PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT);
-            printNsave("Duration     : " + GLOBALS.getInstance().getDuration(),PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT);
-            printNsave("",PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT);
-            printNsave("GROSS AMOUNT      " + df2.format(ca.AmountGross),PrinterConstant.FontSize.LARGE,false, PrintItemObj.ALIGN.LEFT);
+            printNsave("CHINESE GENERAL HOSPITAL MEDICAL CTR", PrinterConstant.FontSize.SMALL, true, PrintItemObj.ALIGN.CENTER);
+            printNsave("286 BLUMENTRITT ST. STA. CRUZ MANILA", PrinterConstant.FontSize.SMALL, true, PrintItemObj.ALIGN.CENTER);
+            printNsave(CONSTANTS.getInstance().getREGTIN(), PrinterConstant.FontSize.SMALL, true, PrintItemObj.ALIGN.CENTER);
+            printNsave(CONSTANTS.getInstance().getMIN(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.CENTER);
+            printNsave(CONSTANTS.getInstance().getPTU(), PrinterConstant.FontSize.SMALL, false, PrintItemObj.ALIGN.CENTER);
+            printNsave("OFFICIAL RECEIPT", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.CENTER);
+            printNsave("CUSTOMER COPY", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.CENTER);
+            printNsave("RECEIPT NUM. : " + recNum, PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+            printNsave("", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+            printNsave("Ent ID.      : " + GLOBALS.getInstance().getEntID(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+            printNsave("Cashier Name : " + GLOBALS.getInstance().getCashierName(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+            printNsave("Location     : " + CONSTANTS.getInstance().getExitID(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+            printNsave("Plate Number : " + GLOBALS.getInstance().getPlateNum(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+            printNsave("Parker Type  : " + GLOBALS.getInstance().getpTypeName(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+            String dtIN = RECEIPT.getInstance().getDatetimeIN().substring(0, RECEIPT.getInstance().getDatetimeIN().length() - 3);
+            String dtOUT = RECEIPT.getInstance().getDatetimeOUT().substring(0, RECEIPT.getInstance().getDatetimeOUT().length() - 3);
+            printNsave("TIME IN      : " + dtIN, PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+            printNsave("TIME OUT     : " + dtOUT, PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+            printNsave("Duration     : " + GLOBALS.getInstance().getDuration(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+            printNsave("", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+                printNsave("GROSS AMOUNT     " + df2.format(ca.AmountGross), PrinterConstant.FontSize.LARGE, false, PrintItemObj.ALIGN.LEFT);
             if (isDiscounted || TRType.compareToIgnoreCase("S") == 0) {
                 printNsave("LESS: VAT           " + df2.format(ca.vat12), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
                 printNsave("NET OF VAT          " + df2.format(ca.NetOfVAT), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
                 printNsave("LESS DSC            " + df2.format(ca.discount), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
                 printNsave("NET OF DSC          " + df2.format(ca.NetOfVAT - ca.discount), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
                 printNsave("ADD VAT             " + df2.format(ca.vat12), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
-            } else if (isDiscounted == false){
+            } else if (isDiscounted == false) {
                 printNsave("VATable Sales       " + df2.format(ca.vatsale), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
                 printNsave("VAT Amt(12%)        " + df2.format(ca.vat12), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
                 printNsave("VAT Exempt          " + "0.00", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
                 printNsave("Zero-Rated          " + "0.00", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
             }
-            printNsave("------------------------------------------",PrinterConstant.FontSize.SMALL,false, PrintItemObj.ALIGN.CENTER);
-            printNsave("TOTAL AMOUNT DUE: " + df2.format(ca.AmountDue),PrinterConstant.FontSize.LARGE,true, PrintItemObj.ALIGN.CENTER);
-            printNsave("------------------------------------------",PrinterConstant.FontSize.SMALL,false, PrintItemObj.ALIGN.CENTER);
-            printNsave("***** CUSTOMER INFO *****",PrinterConstant.FontSize.SMALL,false, PrintItemObj.ALIGN.CENTER);
-            printNsave("Customer Name:____________________________",PrinterConstant.FontSize.SMALL,false, PrintItemObj.ALIGN.LEFT);
-            printNsave("Addr:_____________________________________",PrinterConstant.FontSize.SMALL,false, PrintItemObj.ALIGN.LEFT);
-            printNsave("TIN :_____________________________________",PrinterConstant.FontSize.SMALL,false, PrintItemObj.ALIGN.LEFT);
-            printNsave("Business Type:____________________________",PrinterConstant.FontSize.SMALL,false, PrintItemObj.ALIGN.LEFT);
+            printNsave("------------------------------------------", PrinterConstant.FontSize.SMALL, false, PrintItemObj.ALIGN.CENTER);
+            printNsave("TOTAL AMOUNT DUE: " + df2.format(ca.AmountDue), PrinterConstant.FontSize.LARGE, true, PrintItemObj.ALIGN.CENTER);
+            printNsave("------------------------------------------", PrinterConstant.FontSize.SMALL, false, PrintItemObj.ALIGN.CENTER);
+            printNsave("***** CUSTOMER INFO *****", PrinterConstant.FontSize.SMALL, false, PrintItemObj.ALIGN.CENTER);
+            printNsave("Customer Name:____________________________", PrinterConstant.FontSize.SMALL, false, PrintItemObj.ALIGN.LEFT);
+            printNsave("Addr:_____________________________________", PrinterConstant.FontSize.SMALL, false, PrintItemObj.ALIGN.LEFT);
+            printNsave("TIN :_____________________________________", PrinterConstant.FontSize.SMALL, false, PrintItemObj.ALIGN.LEFT);
+            printNsave("Business Type:____________________________", PrinterConstant.FontSize.SMALL, false, PrintItemObj.ALIGN.LEFT);
 
-            printNsave("please visit",PrinterConstant.FontSize.SMALL,false, PrintItemObj.ALIGN.CENTER);
-            printNsave("www.theoretics.com.ph",PrinterConstant.FontSize.SMALL,false, PrintItemObj.ALIGN.CENTER);
-            printNsave("PARKING POS SUPPLIER",PrinterConstant.FontSize.SMALL,false, PrintItemObj.ALIGN.CENTER);
-            printNsave("APPLIED MODERN THEORETICS INC.",PrinterConstant.FontSize.SMALL,false, PrintItemObj.ALIGN.CENTER);
-            printNsave("ACCRED: 0470083988742019071113",PrinterConstant.FontSize.SMALL,false, PrintItemObj.ALIGN.CENTER);
-            printNsave("Date Issued: 02/05/2020",PrinterConstant.FontSize.SMALL,false, PrintItemObj.ALIGN.CENTER);
-            printNsave("Valid Until: 02/05/2025",PrinterConstant.FontSize.SMALL,false, PrintItemObj.ALIGN.CENTER);
-            printNsave(CONSTANTS.getInstance().getPTU(),PrinterConstant.FontSize.SMALL,false, PrintItemObj.ALIGN.CENTER);
-            printNsave("Date Issued: 03/03/2020",PrinterConstant.FontSize.SMALL,false, PrintItemObj.ALIGN.CENTER);
-            printNsave("Valid Until: 03/03/2025",PrinterConstant.FontSize.SMALL,false, PrintItemObj.ALIGN.CENTER);
-            printNsave("THANK YOU. FOR PARKING",PrinterConstant.FontSize.SMALL,false, PrintItemObj.ALIGN.CENTER);
+            printNsave("please visit", PrinterConstant.FontSize.SMALL, false, PrintItemObj.ALIGN.CENTER);
+            printNsave("www.theoretics.com.ph", PrinterConstant.FontSize.SMALL, false, PrintItemObj.ALIGN.CENTER);
+            printNsave("PARKING POS SUPPLIER", PrinterConstant.FontSize.SMALL, false, PrintItemObj.ALIGN.CENTER);
+            printNsave("APPLIED MODERN THEORETICS INC.", PrinterConstant.FontSize.SMALL, false, PrintItemObj.ALIGN.CENTER);
+            printNsave("ACCRED: 0470083988742019071113", PrinterConstant.FontSize.SMALL, false, PrintItemObj.ALIGN.CENTER);
+            printNsave("Date Issued: 02/05/2020", PrinterConstant.FontSize.SMALL, false, PrintItemObj.ALIGN.CENTER);
+            printNsave("Valid Until: 02/05/2025", PrinterConstant.FontSize.SMALL, false, PrintItemObj.ALIGN.CENTER);
+            printNsave(CONSTANTS.getInstance().getPTU(), PrinterConstant.FontSize.SMALL, false, PrintItemObj.ALIGN.CENTER);
+            printNsave("Date Issued: 03/03/2020", PrinterConstant.FontSize.SMALL, false, PrintItemObj.ALIGN.CENTER);
+            printNsave("Valid Until: 03/03/2025", PrinterConstant.FontSize.SMALL, false, PrintItemObj.ALIGN.CENTER);
+            printNsave("THANK YOU. FOR PARKING", PrinterConstant.FontSize.SMALL, false, PrintItemObj.ALIGN.CENTER);
 
-            printNsave("",PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT);
-            printNsave("",PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT);
-            printNsave("",PrinterConstant.FontSize.NORMAL,false, PrintItemObj.ALIGN.LEFT);
+            printNsave("", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+            printNsave("", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+            printNsave("", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
 
             printerDev.printText(obj2Print, new AidlPrinterListener.Stub() {
 
@@ -808,7 +1019,7 @@ public class ComputationActivity extends BaseActivity implements
                             RECEIPT.getInstance().getPlateNum(),
                             RECEIPT.getInstance().getpType(),
                             RECEIPT.getInstance().getNetOfDiscount(),
-                            RECEIPT.getInstance().getAmountDue()+ "",
+                            RECEIPT.getInstance().getAmountDue() + "",
                             RECEIPT.getInstance().getAmountGross(),
                             RECEIPT.getInstance().getDiscount(),
                             RECEIPT.getInstance().getVatAdjustment(),
@@ -828,11 +1039,13 @@ public class ComputationActivity extends BaseActivity implements
                             RECEIPT.getInstance().getSettlementBusStyle());
 
                     updateXRead();
-                    updateGrandTotal(GLOBALS.getInstance().getAmountDue());
-                    updateGrossTotal(GLOBALS.getInstance().getAmountGross());
+                    double grand = updateGrandTotal(GLOBALS.getInstance().getAmountDue());
+                    double gross = updateGrossTotal(GLOBALS.getInstance().getAmountGross());
                     DBHelper dbh = new DBHelper(getApplicationContext());
                     HttpHandler sh = new HttpHandler(dbh);
                     sh.makeAmbulatory2Server(SERVER_NAME + "/cardAMBExit.php?rfid=", RECEIPT.getInstance().getCardNumber());
+                    sh.sendGRAND2Server(SERVER_NAME + "/general/masters.php?terminalID="+CONSTANTS.getInstance().getExitID()+"&rawText=$", RECEIPT.getInstance().getReceiptNum() + "; " + gross + "; " + grand + " date:");
+
                 }
 
                 @Override
@@ -848,7 +1061,7 @@ public class ComputationActivity extends BaseActivity implements
                             RECEIPT.getInstance().getPlateNum(),
                             RECEIPT.getInstance().getpType(),
                             RECEIPT.getInstance().getNetOfDiscount(),
-                            RECEIPT.getInstance().getAmountDue()+ "",
+                            RECEIPT.getInstance().getAmountDue() + "",
                             RECEIPT.getInstance().getAmountGross(),
                             RECEIPT.getInstance().getDiscount(),
                             RECEIPT.getInstance().getVatAdjustment(),
@@ -868,12 +1081,13 @@ public class ComputationActivity extends BaseActivity implements
                             RECEIPT.getInstance().getSettlementBusStyle());
 
                     updateXRead();
-                    updateGrandTotal(GLOBALS.getInstance().getAmountDue());
-                    updateGrossTotal(GLOBALS.getInstance().getAmountGross());
+                    double grand = updateGrandTotal(GLOBALS.getInstance().getAmountDue());
+                    double gross = updateGrossTotal(GLOBALS.getInstance().getAmountGross());
                     DBHelper dbh = new DBHelper(getApplicationContext());
                     HttpHandler sh = new HttpHandler(dbh);
                     sh.makeAmbulatory2Server(SERVER_NAME + "/cardAMBExit.php?rfid=", RECEIPT.getInstance().getCardNumber());
-
+                    sh.sendGRAND2Server(SERVER_NAME + "/general/masters.php?terminalID="+CONSTANTS.getInstance().getExitID()+"&rawText=", RECEIPT.getInstance().getReceiptNum() + "; " + gross + "; " + grand + "$");
+                    finish();
                 }
 
             });
@@ -883,7 +1097,7 @@ public class ComputationActivity extends BaseActivity implements
         }
     }
 
-    public void updateXRead () {
+    public void updateXRead() {
         DBHelper dbh = new DBHelper(getApplicationContext());
 
         //=================================Count==============================
@@ -933,16 +1147,13 @@ public class ComputationActivity extends BaseActivity implements
             } else if (GLOBALS.getInstance().getpType().compareToIgnoreCase("RM") == 0) {
                 int mabregularCount = dbh.getImptCount("mabregularCount");
                 dbh.setImptCount("mabregularCount", mabregularCount);
-            }
-            else if (GLOBALS.getInstance().getpType().compareToIgnoreCase("G") == 0) {
+            } else if (GLOBALS.getInstance().getpType().compareToIgnoreCase("G") == 0) {
                 int graceperiodCount = dbh.getImptCount("graceperiodCount");
                 dbh.setImptCount("graceperiodCount", graceperiodCount);
-            }
-            else if (GLOBALS.getInstance().getpType().compareToIgnoreCase("L") == 0) {
+            } else if (GLOBALS.getInstance().getpType().compareToIgnoreCase("L") == 0) {
                 int graceperiodCount = dbh.getImptCount("graceperiodCount");
                 dbh.setImptCount("graceperiodCount", graceperiodCount);
-            }
-            else if (GLOBALS.getInstance().getpType().compareToIgnoreCase("DS") == 0) {
+            } else if (GLOBALS.getInstance().getpType().compareToIgnoreCase("DS") == 0) {
                 int dialysisCount = dbh.getImptCount("dialysisCount");
                 dbh.setImptCount("dialysisCount", dialysisCount);
             }
@@ -999,16 +1210,13 @@ public class ComputationActivity extends BaseActivity implements
             } else if (GLOBALS.getInstance().getpType().compareToIgnoreCase("RM") == 0) {
                 double mabregularAmount = dbh.getImptAmount("mabregularAmount");
                 dbh.setImptAmount("mabregularAmount", mabregularAmount + GLOBALS.getInstance().getAmountDue());
-            }
-            else if (GLOBALS.getInstance().getpType().compareToIgnoreCase("G") == 0) {
+            } else if (GLOBALS.getInstance().getpType().compareToIgnoreCase("G") == 0) {
                 double graceperiodAmount = dbh.getImptAmount("graceperiodAmount");
                 dbh.setImptAmount("graceperiodAmount", graceperiodAmount);
-            }
-            else if (GLOBALS.getInstance().getpType().compareToIgnoreCase("L") == 0) {
+            } else if (GLOBALS.getInstance().getpType().compareToIgnoreCase("L") == 0) {
                 double lostAmount = dbh.getImptAmount("lostAmount");
                 dbh.setImptAmount("lostAmount", lostAmount + GLOBALS.getInstance().getAmountDue());
-            }
-            else if (GLOBALS.getInstance().getpType().compareToIgnoreCase("DS") == 0) {
+            } else if (GLOBALS.getInstance().getpType().compareToIgnoreCase("DS") == 0) {
                 double dialysisAmount = dbh.getImptAmount("dialysisAmount");
                 dbh.setImptAmount("dialysisAmount", dialysisAmount + GLOBALS.getInstance().getAmountDue());
             }
@@ -1016,19 +1224,21 @@ public class ComputationActivity extends BaseActivity implements
 
     }
 
-    private void updateGrandTotal (double amountDue) {
+    private double updateGrandTotal(double amountDue) {
         DBHelper dbh = new DBHelper(getApplicationContext());
         double grandTotal = dbh.getImptGrand(DBHelper.MASTER_COLUMN_GRANDTOTAL);
         dbh.setGrandTotal(amountDue + grandTotal);
+        return grandTotal;
     }
 
-    private void updateGrossTotal (double amountDue) {
+    private double updateGrossTotal(double amountDue) {
         DBHelper dbh = new DBHelper(getApplicationContext());
         double grossTotal = dbh.getImptGrand(DBHelper.MASTER_COLUMN_GROSSTOTAL);
         dbh.setGrossTotal(amountDue + grossTotal);
+        return grossTotal;
     }
 
-    private void saveTransaction(String ReceiptNumber,String CashierName, String EntranceID,
+    private void saveTransaction(String ReceiptNumber, String CashierName, String EntranceID,
                                  String ExitID, String CardNumber, String PlateNumber, String ParkerType,
                                  String NetOfDiscount, String Amount, String GrossAmount, String discount,
                                  String vatAdjustment, String vat12, String vatsale, String vatExemptedSales,
@@ -1056,6 +1266,7 @@ public class ComputationActivity extends BaseActivity implements
 
         RECEIPT.getInstance().setDiscounted(isDiscounted);
         RECEIPT.getInstance().setAmountGross(ca.AmountGross + "");
+        RECEIPT.getInstance().setAmountGrossDbl(ca.AmountGross);
 
         if (isDiscounted || TRType.compareToIgnoreCase("S") == 0) {
             RECEIPT.getInstance().setVat12(ca.vat12 + "");
@@ -1064,12 +1275,22 @@ public class ComputationActivity extends BaseActivity implements
             RECEIPT.getInstance().setDiscount(ca.discount + "");
             RECEIPT.getInstance().setNetOfDiscount((ca.NetOfVAT - ca.discount) + "");
 
+            RECEIPT.getInstance().setVat12Dbl(ca.vat12);
+            RECEIPT.getInstance().setVatAdjustmentDbl(ca.vatAdjustment);
+            RECEIPT.getInstance().setNetOfVATDbl(ca.NetOfVAT);
+            RECEIPT.getInstance().setDiscountDbl(ca.discount);
+            RECEIPT.getInstance().setNetOfDiscountDbl((ca.NetOfVAT - ca.discount));
+
         } else if (isDiscounted == false) {
             RECEIPT.getInstance().setVatsale(ca.vatsale + "");
             RECEIPT.getInstance().setVat12(ca.vat12 + "");
+
+            RECEIPT.getInstance().setVatsaleDbl(ca.vatsale);
+            RECEIPT.getInstance().setVat12Dbl(ca.vat12);
         }
 
         RECEIPT.getInstance().setAmountDue(ca.AmountDue + "");
+        RECEIPT.getInstance().setAmountDueDbl(ca.AmountDue);
 
     }
 
@@ -1103,7 +1324,7 @@ public class ComputationActivity extends BaseActivity implements
     }
 
 
-    private class PrintStateChangeListener extends AidlPrinterListener.Stub{
+    private class PrintStateChangeListener extends AidlPrinterListener.Stub {
 
         @Override
         public void onError(int arg0) throws RemoteException {
@@ -1119,14 +1340,18 @@ public class ComputationActivity extends BaseActivity implements
     }
 
 
-    private void printBTText(String text){
-        if(!GLOBALS.getInstance().isConnected() && GLOBALS.getInstance().getmPrinter() == null) {
+    private void printBTText() {
+        if (!GLOBALS.getInstance().isConnected() && GLOBALS.getInstance().getmPrinter() == null) {
             return;
         }
-        new Thread(){
+        new Thread() {
             @Override
             public void run() {
-                PrintUtils.printBTText(GLOBALS.getInstance().getmPrinter(), "This is a Test");
+                PrintUtils.printBTText(GLOBALS.getInstance().getmPrinter(), "Mondstat");
+                PrintUtils.printBTText(GLOBALS.getInstance().getmPrinter(), "Liyue");
+                PrintUtils.printBTText(GLOBALS.getInstance().getmPrinter(), "Inuzuma");
+                PrintUtils.printBTText(GLOBALS.getInstance().getmPrinter(), "Sangonomiya");
+
             }
         }.start();
     }

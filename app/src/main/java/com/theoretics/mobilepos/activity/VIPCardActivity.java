@@ -47,9 +47,9 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import static com.theoretics.mobilepos.bean.CONSTANTS.SERVER_NAME;
 import static com.theoretics.mobilepos.util.DBHelper.NET_MANAGER_COLUMN_LDC;
 import static com.theoretics.mobilepos.util.DBHelper.NET_MANAGER_COLUMN_LDM;
-import static com.theoretics.mobilepos.util.DBHelper.SERVER_NAME;
 import static com.theoretics.mobilepos.util.DBHelper.VIP_COLUMN_CARDCODE;
 import static com.theoretics.mobilepos.util.DBHelper.VIP_COLUMN_NAME;
 import static com.theoretics.mobilepos.util.DBHelper.VIP_COLUMN_PARKERTYPE;
@@ -153,13 +153,13 @@ public class VIPCardActivity extends BaseActivity {
         //    }
         //});
 
-        new Timer().scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                getNewVIPS();
-                System.out.println("ANGELO : [" + new Date().toString() + "]" );
-            }
-        },5000,60000 * 2);
+       // new Timer().scheduleAtFixedRate(new TimerTask() {
+        //    @Override
+        //    public void run() {
+                //getNewVIPS();
+                //System.out.println("ANGELO : [" + new Date().toString() + "]" );
+        //    }
+        //},5000,60000 * 2);
 
         txt_log = (TextView)findViewById(R.id.status);
         tv_cardNumber = (TextView)findViewById(R.id.cardNumber);

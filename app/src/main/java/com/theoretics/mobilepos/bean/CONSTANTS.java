@@ -2,18 +2,22 @@ package com.theoretics.mobilepos.bean;
 
 public class CONSTANTS {
     private static CONSTANTS instance;
-    private String exitID = "AB01";
-    private String defaultPType = "RM";
 
+    private String defaultPType = "RM";
     private String REGTIN = "VAT REG TIN: 000-328-853-000";
-    //private String MIN = "MIN: 21060915095156961";//WT
-    //private String PTU = "PTU NO: FP062021-031-0292659-00000";//HZ511SACOL350WT
-    private String MIN = "MIN: 21060915095156962";//FC
-    private String PTU = "PTU NO: FP062021-031-0292660-00000";//HZ511SACOL350FC
+
+    //private String exitID = "AB01";
+    //private String MIN = "MIN: 21060915095156962";//HZ511SACOL350FC
+    //private String PTU = "PTU NO: FP062021-031-0292660-00000";//HZ511SACOL350FC
+    private String exitID = "AB02";
+    private String MIN = "MIN: 21060915095156961";//HZ511SACOL350WT
+    private String PTU = "PTU NO: FP062021-031-0292659-00000";//HZ511SACOL350WT
     //SERIAL Numbers    =       MIN             =       PTU
     //HZ511SAC0L350FC   =   21060915095156962   =   FP062021-031-0292660-00000
     //HZ511SACOL350WT   =   21060915095156961   =   FP062021-031-0292659-00000
     //82419030100784    =   21082609343066135   =   FP082021-031-0298934-00000
+    public static final String SERVER_NAME = "http://192.168.100.240";
+    //public static final String SERVER_NAME = "http://192.168.1.80";
 
     public CONSTANTS(){}
 

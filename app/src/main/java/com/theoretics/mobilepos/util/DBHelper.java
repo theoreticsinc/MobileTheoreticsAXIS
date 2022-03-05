@@ -23,7 +23,7 @@ import java.util.HashMap;
 public class DBHelper extends SQLiteOpenHelper {
 //
     //public static final String SERVER_NAME = "http://192.168.100.240";
-    public static final String SERVER_NAME = "http://192.168.1.80";
+    //public static final String SERVER_NAME = "http://192.168.1.80";
     public static final String DATABASE_NAME = "mobilepos.db";
 
     public static final String NET_MANAGER_TABLE_NAME = "netmanager";
@@ -338,7 +338,6 @@ public class DBHelper extends SQLiteOpenHelper {
         contentValues.put("SettlementAddr", SettlementAddr);
         contentValues.put("SettlementTIN", SettlementTIN);
         contentValues.put("SettlementBusStyle", SettlementBusStyle);
-
         db.insert(EXIT_TABLE_NAME, null, contentValues);
     }
 
@@ -1138,19 +1137,19 @@ public class DBHelper extends SQLiteOpenHelper {
         System.out.println("ANGELO : [Checking new POS Users" + new Date().toString() + "]" );
         db.execSQL("INSERT INTO " + POS_TABLE_NAME + " VALUES(null, 'Roseveeh', '" + md5("Roseveeh") + "', 'Roseveeh')");
         db.execSQL("INSERT INTO " + POS_TABLE_NAME + " VALUES(null, 'Joan', '" + md5("Joan") + "', 'Joan')");
-        db.execSQL("INSERT INTO " + POS_TABLE_NAME + " VALUES(null, 'claudine', '" + md5("claudine") + "', 'Claudine')");
-        db.execSQL("INSERT INTO " + POS_TABLE_NAME + " VALUES(null, 'hazel', '" + md5("hazel") + "', 'Hazel')");
+        db.execSQL("INSERT INTO " + POS_TABLE_NAME + " VALUES(null, 'claudine', '" + md5("claudine") + "', 'claudine')");
+        db.execSQL("INSERT INTO " + POS_TABLE_NAME + " VALUES(null, 'hazel', '" + md5("hazel") + "', 'hazel')");
         db.execSQL("INSERT INTO " + POS_TABLE_NAME + " VALUES(null, 'Xyree', '" + md5("Xyree") + "', 'Xyree')");
         db.execSQL("INSERT INTO " + POS_TABLE_NAME + " VALUES(null, 'Carla', '" + md5("Carla") + "', 'Carla')");
         db.execSQL("INSERT INTO " + POS_TABLE_NAME + " VALUES(null, 'Cielo', '" + md5("Cielo") + "', 'Cielo')");
         db.execSQL("INSERT INTO " + POS_TABLE_NAME + " VALUES(null, 'Claudine2', '" + md5("Claudine2") + "', 'Claudine2')");
         db.execSQL("INSERT INTO " + POS_TABLE_NAME + " VALUES(null, 'Carla2', '" + md5("Carla2") + "', 'Carla2')");
-        db.execSQL("INSERT INTO " + POS_TABLE_NAME + " VALUES(null, 'hazel2', '" + md5("hazel2") + "', 'Hazel2')");
+        db.execSQL("INSERT INTO " + POS_TABLE_NAME + " VALUES(null, 'hazel2', '" + md5("hazel2") + "', 'hazel2')");
         db.execSQL("INSERT INTO " + POS_TABLE_NAME + " VALUES(null, 'Joan2', '" + md5("Joan2") + "', 'Joan2')");
         db.execSQL("INSERT INTO " + POS_TABLE_NAME + " VALUES(null, 'Cielo2', '" + md5("Cielo2") + "', 'Cielo2')");
         db.execSQL("INSERT INTO " + POS_TABLE_NAME + " VALUES(null, 'Roseveeh2', '" + md5("Roseveeh2") + "', 'Roseveeh2')");
         db.execSQL("INSERT INTO " + POS_TABLE_NAME + " VALUES(null, 'Xyree2', '" + md5("Xyree2") + "', 'Xyree2')");
-        db.execSQL("INSERT INTO " + POS_TABLE_NAME + " VALUES(null, 'roseann2', '" + md5("roseann2") + "', 'Roseann2')");
+        db.execSQL("INSERT INTO " + POS_TABLE_NAME + " VALUES(null, 'roseann2', '" + md5("roseann2") + "', 'roseann2')");
         db.execSQL("INSERT INTO " + POS_TABLE_NAME + " VALUES(null, 'm', '" + md5("m") + "', 'm')");
         db.execSQL("INSERT INTO " + POS_TABLE_NAME + " VALUES(null, 'manuel', '" + md5("manuel") + "', 'manuel')");
         db.execSQL("INSERT INTO " + POS_TABLE_NAME + " VALUES(null, 'mary', '" + md5("mary") + "', 'mary')");

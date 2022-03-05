@@ -29,6 +29,7 @@ import com.android.print.sdk.PrinterInstance;
 import com.theoretics.mobilepos.R;
 import com.theoretics.mobilepos.bean.CONSTANTS;
 import com.theoretics.mobilepos.bean.GLOBALS;
+import com.theoretics.mobilepos.bean.RECEIPT;
 import com.theoretics.mobilepos.bluetooth.BluetoothOperation;
 import com.theoretics.mobilepos.permission.EasyPermission;
 import com.theoretics.mobilepos.util.DBHelper;
@@ -61,6 +62,7 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import static com.theoretics.mobilepos.bean.CONSTANTS.SERVER_NAME;
 import static com.theoretics.mobilepos.util.DBHelper.CARD_COLUMN_CARDCODE;
 import static com.theoretics.mobilepos.util.DBHelper.CARD_COLUMN_LANE;
 import static com.theoretics.mobilepos.util.DBHelper.CARD_COLUMN_PC;
@@ -69,7 +71,6 @@ import static com.theoretics.mobilepos.util.DBHelper.CARD_COLUMN_TIMEIN;
 import static com.theoretics.mobilepos.util.DBHelper.CARD_COLUMN_VEHICLE;
 import static com.theoretics.mobilepos.util.DBHelper.EXIT_TABLE_NAME;
 import static com.theoretics.mobilepos.util.DBHelper.NET_MANAGER_COLUMN_LDM;
-import static com.theoretics.mobilepos.util.DBHelper.SERVER_NAME;
 import static com.theoretics.mobilepos.util.DBHelper.VIP_TABLE_NAME;
 import static com.theoretics.mobilepos.util.DBHelper.XREAD_TABLE_NAME;
 
@@ -171,7 +172,7 @@ public class ParkingExitActivity extends BaseActivity implements EasyPermission.
     }
 
     @Override
-    public void onResume(){
+    public void onResume() {
         super.onResume();
     }
 
@@ -192,16 +193,16 @@ public class ParkingExitActivity extends BaseActivity implements EasyPermission.
     public String initiateFiles() {
         //file = context.getExternalFilesDir((String) null);
         internalfile = new File(internalPath);
-        if(internalfile.exists() == false) {
+        if (internalfile.exists() == false) {
             internalfile.mkdir();
         }
         sdfile = new File(sdCardPath);
-        if(sdfile.exists() == false) {
+        if (sdfile.exists() == false) {
             boolean b = sdfile.mkdirs();
             System.out.println(sdCardPath + " was created = " + b);
         }
         sdfile = new File(sdPath);
-        if(sdfile.exists() == false) {
+        if (sdfile.exists() == false) {
             boolean b = sdfile.mkdirs();
             System.out.println(sdCardPath + " was created = " + b);
         }
@@ -209,7 +210,7 @@ public class ParkingExitActivity extends BaseActivity implements EasyPermission.
 
     }
 
-    protected void onStart(){
+    protected void onStart() {
         super.onStart();
 
 //checkLog();
@@ -226,10 +227,10 @@ public class ParkingExitActivity extends BaseActivity implements EasyPermission.
                 GLOBALS.getInstance().setPlateNum(inputPlate.getText().toString());
                 GLOBALS.getInstance().setReceiptCopyType("CUSTOMER COPY");
                 Intent intent = new Intent(ParkingExitActivity.this, ComputationActivity.class);
-                intent.putExtra("cardNum",cardNum.getText());
-                intent.putExtra("inputPlate",inputPlate.getText().toString());
+                intent.putExtra("cardNum", cardNum.getText());
+                intent.putExtra("inputPlate", inputPlate.getText().toString());
 
-                intent.putExtra("isDiscounted",false);
+                intent.putExtra("isDiscounted", false);
                 intent.putExtra("TRType", CONSTANTS.getInstance().getDefaultPType());
                 intent.putExtra("daysElapsed", daysElapsed);
                 intent.putExtra("hrsRemaining", hrsRemaining);
@@ -245,11 +246,11 @@ public class ParkingExitActivity extends BaseActivity implements EasyPermission.
                 GLOBALS.getInstance().setPlateNum(inputPlate.getText().toString());
                 GLOBALS.getInstance().setReceiptCopyType("CUSTOMER COPY");
                 Intent intent = new Intent(ParkingExitActivity.this, ComputationActivity.class);
-                intent.putExtra("cardNum",cardNum.getText());
-                intent.putExtra("inputPlate",inputPlate.getText().toString());
+                intent.putExtra("cardNum", cardNum.getText());
+                intent.putExtra("inputPlate", inputPlate.getText().toString());
 
-                intent.putExtra("isDiscounted",true);
-                intent.putExtra("TRType","S");
+                intent.putExtra("isDiscounted", true);
+                intent.putExtra("TRType", "S");
                 intent.putExtra("daysElapsed", daysElapsed);
                 intent.putExtra("hrsRemaining", hrsRemaining);
                 intent.putExtra("minsRemaining", minsRemaining);
@@ -263,11 +264,11 @@ public class ParkingExitActivity extends BaseActivity implements EasyPermission.
                 GLOBALS.getInstance().setPlateNum(inputPlate.getText().toString());
                 GLOBALS.getInstance().setReceiptCopyType("CUSTOMER COPY");
                 Intent intent = new Intent(ParkingExitActivity.this, ComputationActivity.class);
-                intent.putExtra("cardNum",cardNum.getText());
-                intent.putExtra("inputPlate",inputPlate.getText().toString());
+                intent.putExtra("cardNum", cardNum.getText());
+                intent.putExtra("inputPlate", inputPlate.getText().toString());
 
-                intent.putExtra("isDiscounted",false);
-                intent.putExtra("TRType","V");
+                intent.putExtra("isDiscounted", false);
+                intent.putExtra("TRType", "V");
                 intent.putExtra("daysElapsed", daysElapsed);
                 intent.putExtra("hrsRemaining", hrsRemaining);
                 intent.putExtra("minsRemaining", minsRemaining);
@@ -281,11 +282,11 @@ public class ParkingExitActivity extends BaseActivity implements EasyPermission.
                 GLOBALS.getInstance().setPlateNum(inputPlate.getText().toString());
                 GLOBALS.getInstance().setReceiptCopyType("CUSTOMER COPY");
                 Intent intent = new Intent(ParkingExitActivity.this, ComputationActivity.class);
-                intent.putExtra("cardNum",cardNum.getText());
-                intent.putExtra("inputPlate",inputPlate.getText().toString());
+                intent.putExtra("cardNum", cardNum.getText());
+                intent.putExtra("inputPlate", inputPlate.getText().toString());
 
-                intent.putExtra("isDiscounted",false);
-                intent.putExtra("TRType","DS");
+                intent.putExtra("isDiscounted", false);
+                intent.putExtra("TRType", "DS");
                 intent.putExtra("daysElapsed", daysElapsed);
                 intent.putExtra("hrsRemaining", hrsRemaining);
                 intent.putExtra("minsRemaining", minsRemaining);
@@ -305,9 +306,9 @@ public class ParkingExitActivity extends BaseActivity implements EasyPermission.
             @Override
             public void run() {
                 runNetManager();
-                System.out.println("ANGELO : [" + new Date().toString() + "]" );
+                System.out.println("ANGELO : [" + new Date().toString() + "]");
             }
-        },25000,60000 * 5);
+        }, 25000, 60000 * 5);
 
         initDialog();
         //connClick();
@@ -320,7 +321,7 @@ public class ParkingExitActivity extends BaseActivity implements EasyPermission.
             case CONNECT_DEVICE:
                 if (resultCode == Activity.RESULT_OK) {
                     GLOBALS.getInstance().getDialog().show();
-                    new Thread(new Runnable(){
+                    new Thread(new Runnable() {
                         public void run() {
                             GLOBALS.getInstance().getMyOperation().open(data);
                         }
@@ -328,15 +329,15 @@ public class ParkingExitActivity extends BaseActivity implements EasyPermission.
                 }
                 break;
             case ENABLE_BT:
-                if (resultCode == Activity.RESULT_OK){
+                if (resultCode == Activity.RESULT_OK) {
                     GLOBALS.getInstance().getMyOperation().chooseDevice();
-                }else{
+                } else {
                     Toast.makeText(this, R.string.bt_not_enabled, Toast.LENGTH_SHORT).show();
                 }
         }
     }
 
-    private void openConn(){
+    private void openConn() {
         if (!isConnected) {
             //myOperation = (IPrinterOperation) new BluetoothOperation(ParkingExitActivity.this, mHandler);
             //myOperation.chooseDevice();
@@ -347,14 +348,13 @@ public class ParkingExitActivity extends BaseActivity implements EasyPermission.
 
     }
 
-    private void resetConn(){
+    private void resetConn() {
         GLOBALS.getInstance().setMyOperation((IPrinterOperation) new BluetoothOperation(context, mHandler));
         GLOBALS.getInstance().getMyOperation().chooseDevice();
 
     }
 
-    public void runNetManager()
-    {
+    public void runNetManager() {
         Cursor res = null;
         HttpHandler sh = new HttpHandler(dbh);
         String pattern = "yyyy-MM-dd hh:mm:ss";
@@ -364,8 +364,7 @@ public class ParkingExitActivity extends BaseActivity implements EasyPermission.
         res = dbh.getLastDateData();
         if (res == null) {
             return;
-        }
-        else if (res.getCount() == 0) {
+        } else if (res.getCount() == 0) {
             Date now = new Date();
             String n = sdf.format(now);
             System.out.println(n);
@@ -374,8 +373,7 @@ public class ParkingExitActivity extends BaseActivity implements EasyPermission.
             dbh.insertLDCandLDM(XREAD_TABLE_NAME, n, n);
             dbh.insertLDCandLDM(EXIT_TABLE_NAME, n, n);
             //sh.getNewVIPFromServer(SERVER_NAME + "/vipchecknew.php?from=", n);
-        }
-        else {
+        } else {
 
 
             //-----------------Exit Transactions Upload 2 Server
@@ -426,15 +424,17 @@ public class ParkingExitActivity extends BaseActivity implements EasyPermission.
                     String x = data4uploading.getString(data4uploading.getColumnIndex("SettlementAddr"));
                     String y = data4uploading.getString(data4uploading.getColumnIndex("SettlementTIN"));
                     String z = data4uploading.getString(data4uploading.getColumnIndex("SettlementBusStyle"));
-String sql = "INSERT INTO `carpark`.`exit_trans` (`pkid`, `void`, `voidRefID`, `ReceiptNumber`, `CashierName`, `EntranceID`, `ExitID`, `CardNumber`, `PlateNumber`, `ParkerType`, `NetOfDiscount`, `Amount`, `GrossAmount`, `discount`, `vatAdjustment`, `vat12`, `vatsale`, `vatExemptedSales`, `tendered`, `changeDue`, `DateTimeIN`, `DateTimeOUT`, `HoursParked`, `MinutesParked`, `SettlementRef`, `SettlementName`, `SettlementAddr`, `SettlementTIN`, `SettlementBusStyle`) " +
-        "VALUES (NULL, '0', NULL, '"+a+"', '"+b+"', '"+c+"', '"+d+"', '"+e+"', '"+f+"', '"+g+"', '"+h+"', '"+i+"', '"+j+"', '"+k+"', '"+l+"', '"+m+"', '"+n+"', '"+o+"', '"+p+"', '"+q+"', '"+r+"', '"+s+"', '"+t+"', '"+u+"', '"+v+"', '"+w+"', '"+x+"', '"+y+"', '"+z+"')";
+                    String sql = "INSERT INTO `carpark`.`exit_trans` (`pkid`, `void`, `voidRefID`, `ReceiptNumber`, `CashierName`, `EntranceID`, `ExitID`, `CardNumber`, `PlateNumber`, `ParkerType`, `NetOfDiscount`, `Amount`, `GrossAmount`, `discount`, `vatAdjustment`, `vat12`, `vatsale`, `vatExemptedSales`, `tendered`, `changeDue`, `DateTimeIN`, `DateTimeOUT`, `HoursParked`, `MinutesParked`, `SettlementRef`, `SettlementName`, `SettlementAddr`, `SettlementTIN`, `SettlementBusStyle`) " +
+                            "VALUES (NULL, '0', NULL, '" + a + "', '" + b + "', '" + c + "', '" + d + "', '" + e + "', '" + f + "', '" + g + "', '" + h + "', '" + i + "', '" + j + "', '" + k + "', '" + l + "', '" + m + "', '" + n + "', '" + o + "', '" + p + "', '" + q + "', '" + r + "', '" + s + "', '" + t + "', '" + u + "', '" + v + "', '" + w + "', '" + x + "', '" + y + "', '" + z + "')";
                     System.out.println("ANGELO :" + sql);
                     String retStr = sh.updateData2Server(SERVER_NAME + "/upload2server.php?sql=", sql, s);
 
                     System.out.println("ANGELO : returned from Server Uploading : " + retStr);
 
-                    //force
-                    dbh.updateLDM(EXIT_TABLE_NAME, s);
+                    //if (null != retStr) {
+                        //force
+                        dbh.updateLDM(EXIT_TABLE_NAME, s);
+                    //}
                     data4uploading.moveToNext();
                 }
 
@@ -516,8 +516,8 @@ String sql = "INSERT INTO `carpark`.`exit_trans` (`pkid`, `void`, `voidRefID`, `
                     String X = data4uploading.getString(data4uploading.getColumnIndex("graceperiodCount")) + "";
                     String Y = data4uploading.getDouble(data4uploading.getColumnIndex("graceperiodAmount")) + "";
                     String Z = data4uploading.getString(data4uploading.getColumnIndex("lostCount")) + "";
-                    String a1= data4uploading.getDouble(data4uploading.getColumnIndex("lostAmount")) + "";
-                    String b1= data4uploading.getString(data4uploading.getColumnIndex("promoCount")) + "";
+                    String a1 = data4uploading.getDouble(data4uploading.getColumnIndex("lostAmount")) + "";
+                    String b1 = data4uploading.getString(data4uploading.getColumnIndex("promoCount")) + "";
                     String c1 = data4uploading.getDouble(data4uploading.getColumnIndex("promoAmount")) + "";
                     String d1 = data4uploading.getString(data4uploading.getColumnIndex("localseniorCount")) + "";
                     String e1 = data4uploading.getDouble(data4uploading.getColumnIndex("localseniorAmount")) + "";
@@ -553,10 +553,10 @@ String sql = "INSERT INTO `carpark`.`exit_trans` (`pkid`, `void`, `voidRefID`, `
                     String I1 = data4uploading.getDouble(data4uploading.getColumnIndex("ambulatoryAmount")) + "";
 
                     String sql = "INSERT INTO `colltrain`.`main` (`logINID`, `SentinelID`, `userCode`, `userName`, `loginStamp`, `logoutStamp`, `extendedCount`, `extendedAmount`, `overnightCount`, `overnightAmount`, `carServed`, `totalCount`, `totalAmount`, `grossCount`, `grossAmount`, `vat12Count`, `vat12Amount`, `vatsaleCount`, `vatsaleAmount`, `vatExemptedSalesCount`, `vatExemptedSalesAmount`, `exemptedVat12Count`, `exemptedVat12Amount`, `pwdDiscountCount`, `pwdDiscountAmount`, `seniorDiscountCount`, `seniorDiscountAmount`, `localseniorDiscountCount`, `localseniorDiscountAmount`, `vatAdjPWDCount`, `vatAdjPWDAmount`, `vatAdjSeniorCount`, `vatAdjSeniorAmount`, `vatAdjLocalSeniorCount`, `vatAdjLocalSeniorAmount`, `vat12PWDCount`, `vat12PWDAmount`, `vat12SeniorCount`, `vat12SeniorAmount`, `vat12LocalSeniorCount`, `vat12LocalSeniorAmount`, `voidsCount`, `voidsAmount`, `refundCount`, `refundAmount`, `regularCount`, `regularAmount`, `vipCount`, `vipAmount`, `graceperiodCount`, `graceperiodAmount`, `lostCount`, `lostAmount`, `promoCount`, `promoAmount`, `localseniorCount`, `localseniorAmount`, `seniorCount`, `seniorAmount`, `pwdCount`, `pwdAmount`, `motorcycleCount`, `motorcycleAmount`, `jeepCount`, `jeepAmount`, `tricycleCount`, `tricycleAmount`, `deliveryCount`, `deliveryAmount`, `bpoemployeeCount`, `bpoemployeeAmount`, `employeesCount`, `employeesAmount`, `tenantsCount`, `tenantsAmount`, `mabregularCount`, `mabregularAmount`, `seniormotorCount`, `seniormotorAmount`, `ambulanceCount`, `ambulanceAmount`, `inpatientCount`, `inpatientAmount`, `dialysisCount`, `dialysisAmount`, `ambulatoryCount`, `ambulatoryAmount`) " +
-                            "VALUES ('"+a+"', '"+b+"', '"+c+"', '"+d+"', '"+e+"', '"+f+"', '"+g+"', '"+h+"', '"+i+"', '"+j+"', '"+k+"', '"+l+"', '"+m+"', '"+n+"', '"+o+"', '"+p+"', '"+q+"', '"+r+"', '"+s+"', '"+t+"', '"+u+"', '"+v+"', '"+w+"', '"+x+"','"+y+"', '"+z+"', " +
-                            "'"+A+"', '"+B+"', '"+C+"', '"+D+"', '"+E+"', '"+F+"', '"+G+"', '"+H+"', '"+I+"', '"+J+"', '"+K+"', '"+L+"', '"+M+"', '"+N+"', '"+O+"', '"+P+"', '"+Q+"', '"+R+"', '"+S+"', '"+T+"', '"+U+"', '"+V+"', '"+W+"', '"+X+"','"+Y+"', '"+Z+"', " +
-                            "'"+a1+"', '"+b1+"', '"+c1+"', '"+d1+"', '"+e1+"', '"+f1+"', '"+g1+"', '"+h1+"', '"+i1+"', '"+j1+"', '"+k1+"', '"+l1+"', '"+m1+"', '"+n1+"', '"+o1+"', '"+p1+"', '"+q1+"', '"+r1+"', '"+s1+"', '"+t1+"', '"+u1+"', '"+v1+"', '"+w1+"', '"+x1+"', '"+y1+"', '"+z1+"', " +
-                            "'"+A1+"', '"+B1+"', '"+C1+"', '"+D1+"', '"+E1+"', '"+F1+"', '"+G1+"', '"+H1+"', '"+I1+"');";
+                            "VALUES ('" + a + "', '" + b + "', '" + c + "', '" + d + "', '" + e + "', '" + f + "', '" + g + "', '" + h + "', '" + i + "', '" + j + "', '" + k + "', '" + l + "', '" + m + "', '" + n + "', '" + o + "', '" + p + "', '" + q + "', '" + r + "', '" + s + "', '" + t + "', '" + u + "', '" + v + "', '" + w + "', '" + x + "','" + y + "', '" + z + "', " +
+                            "'" + A + "', '" + B + "', '" + C + "', '" + D + "', '" + E + "', '" + F + "', '" + G + "', '" + H + "', '" + I + "', '" + J + "', '" + K + "', '" + L + "', '" + M + "', '" + N + "', '" + O + "', '" + P + "', '" + Q + "', '" + R + "', '" + S + "', '" + T + "', '" + U + "', '" + V + "', '" + W + "', '" + X + "','" + Y + "', '" + Z + "', " +
+                            "'" + a1 + "', '" + b1 + "', '" + c1 + "', '" + d1 + "', '" + e1 + "', '" + f1 + "', '" + g1 + "', '" + h1 + "', '" + i1 + "', '" + j1 + "', '" + k1 + "', '" + l1 + "', '" + m1 + "', '" + n1 + "', '" + o1 + "', '" + p1 + "', '" + q1 + "', '" + r1 + "', '" + s1 + "', '" + t1 + "', '" + u1 + "', '" + v1 + "', '" + w1 + "', '" + x1 + "', '" + y1 + "', '" + z1 + "', " +
+                            "'" + A1 + "', '" + B1 + "', '" + C1 + "', '" + D1 + "', '" + E1 + "', '" + F1 + "', '" + G1 + "', '" + H1 + "', '" + I1 + "');";
                     System.out.println("ANGELO :" + sql);
                     String retStr = sh.updateData2Server(SERVER_NAME + "/upload2server.php?sql=", sql, f);
                     System.out.println("ANGELO : returned from Server Uploading : " + retStr);
@@ -577,9 +577,18 @@ String sql = "INSERT INTO `carpark`.`exit_trans` (`pkid`, `void`, `voidRefID`, `
     private void checkLog() {
         //rec.createNewFile();
         //datetimeOUT.setText(GLOBALS.getInstance().getCashierID() + GLOBALS.getInstance().getCashierName()+GLOBALS.getInstance().getLoginID());
-        if(dbh.isDeviceLoggedIN() == false) {
+        if (dbh.isDeviceLoggedIN() == false) {
             Intent intent = new Intent(ParkingExitActivity.this, LoginActivity.class);
             startActivity(intent);
+        } else {
+            //Test Activity -- Remove b4 deploying
+            //cardNumber = "B26C6823";
+            //String cardStatus = getExitCard(SERVER_NAME + "/cardCheck.php?rfid=", cardNumber);
+            //System.out.println("ANGELO getExitCard:" + retStr + cardStatus);
+            //Intent intent = new Intent(ParkingExitActivity.this, DisplayVIPActivity.class);
+            //intent.putExtra("cardNum",cardNum.getText());
+            //intent.putExtra("cardNum","TESTCARD");
+            //startActivity(intent);
         }
         if (dbh.getMaster() == false) {
             dbh.initiateMaster();
@@ -703,6 +712,7 @@ String sql = "INSERT INTO `carpark`.`exit_trans` (`pkid`, `void`, `voidRefID`, `
                     if (isexist) {
                         //sendmessage("card is exists" + " Card type is " + getCardType(cardtype));
                         System.out.println("ANGELO Card Present:::");
+                        RECEIPT.getInstance().setDiscounted(false);
                         cardNumber = getCardId();
                         //cardNum.setText("Checked");
                         stop_autoRead();
@@ -757,7 +767,7 @@ String sql = "INSERT INTO `carpark`.`exit_trans` (`pkid`, `void`, `voidRefID`, `
                             String cardStatus = getExitCard(SERVER_NAME + "/cardCheck.php?rfid=", cardNumber);
                             System.out.println("ANGELO getExitCard:" + retStr + cardStatus);
                         }
-                        prevCardNumber = cardNumber;
+                        //prevCardNumber = cardNumber;
                     }
                 });
                 return cardID;
@@ -833,8 +843,30 @@ String sql = "INSERT INTO `carpark`.`exit_trans` (`pkid`, `void`, `voidRefID`, `
                         //appending it to string builder
                         sb.append(json + "\n");
                         System.out.println("ANGELO : [" + i + "]" + json + "\n");
-                        //PROCESS JSON to DB
+                        //PROCESS JSON to DB=
                         HashMap<String, String> cardData = grabCardFromServer(dbh, json);
+                        System.out.println("ANGELO : Vehicle = " + cardData.get("Vehicle"));
+                        if (cardData.get("Vehicle").compareToIgnoreCase("VIPDOCTOR") == 0) {
+                            System.out.println("ANGELO : [" + cardData.get("Vehicle") + "]\n");
+                            Intent intent = new Intent(ParkingExitActivity.this, DisplayVIPActivity.class);
+                            //intent.putExtra("cardNum","TESTCARD");
+                            intent.putExtra("cardNum",cardNum.getText());
+                            intent.putExtra("firstName",cardData.get("firstName"));
+                            intent.putExtra("lastName",cardData.get("lastName"));
+                            intent.putExtra("plates",cardData.get("plates").replace(",","\n\r"));
+                            intent.putExtra("vehicletypes",cardData.get("vehicletypes"));
+                            intent.putExtra("Timein",cardData.get("Timein"));
+                            /*
+                            if (cardData.get("Timein") == null) {
+                                intent.putExtra("Timein","Doctor / VIP has no Entry Record.");
+                            }
+                            if (cardData.get("Timein").compareToIgnoreCase("null") == 0) {
+                                intent.putExtra("Timein",cardData.get("Timein"));
+                            }
+                            */
+                            startActivity(intent);
+                        }
+
                         //dbh.updateLDM(ldm);
                     }
                     if (sb.toString().compareToIgnoreCase("") == 0) {
@@ -845,6 +877,8 @@ String sql = "INSERT INTO `carpark`.`exit_trans` (`pkid`, `void`, `voidRefID`, `
                                 datetimeOUT.setText("");
                                 durationElapsed.setText("");
                                 inputPlate.setText("");
+                                //Intent intent = new Intent(ParkingExitActivity.this, DisplayVIPActivity.class);
+                                //startActivity(intent);
                             }
                         });
                     } else {
@@ -872,12 +906,12 @@ String sql = "INSERT INTO `carpark`.`exit_trans` (`pkid`, `void`, `voidRefID`, `
     }
 
 
-    private void connClick(){
-        if(GLOBALS.getInstance().isConnected()){
+    private void connClick() {
+        if (GLOBALS.getInstance().isConnected()) {
             GLOBALS.getInstance().getMyOperation().close();
             GLOBALS.getInstance().setMyOperation(null);
             GLOBALS.getInstance().setmPrinter(null);
-        }else{
+        } else {
 
             new AlertDialog.Builder(context)
                     .setTitle(R.string.str_message)
@@ -900,7 +934,7 @@ String sql = "INSERT INTO `carpark`.`exit_trans` (`pkid`, `void`, `voidRefID`, `
         }
     }
 
-    private void tipUpdate(final String filePath){
+    private void tipUpdate(final String filePath) {
         AlertDialog dialog = new AlertDialog.Builder(context)
                 .setTitle("提示")
                 .setMessage(filePath + "\n请确认打印机版本是否支持")
@@ -922,13 +956,13 @@ String sql = "INSERT INTO `carpark`.`exit_trans` (`pkid`, `void`, `voidRefID`, `
     /**
      * wifi机器需要定时读取打印机数据, 如下代码
      * 当连接断开时, 读取数据 read() 会触发断开连接的消息
-     *
+     * <p>
      * USB 蓝牙 可忽略
      */
-    private class MyTask extends java.util.TimerTask{
+    private class MyTask extends java.util.TimerTask {
         @Override
         public void run() {
-            if(GLOBALS.getInstance().isConnected() && GLOBALS.getInstance().getmPrinter() != null) {
+            if (GLOBALS.getInstance().isConnected() && GLOBALS.getInstance().getmPrinter() != null) {
                 byte[] by = GLOBALS.getInstance().getmPrinter().read();
                 if (by != null) {
                     System.out.println(GLOBALS.getInstance().getmPrinter().isConnected() + " read byte " + Arrays.toString(by));
@@ -942,16 +976,16 @@ String sql = "INSERT INTO `carpark`.`exit_trans` (`pkid`, `void`, `voidRefID`, `
      * 更新界面状态
      */
     private void updateButtonState() {
-        if(!GLOBALS.getInstance().isConnected()){
+        if (!GLOBALS.getInstance().isConnected()) {
             //connectAddress.setText(R.string.no_conn_address);
             //connectState.setText(R.string.connect);
             //connectName.setText(R.string.no_conn_name);
-        }else{
-            if( bt_mac!=null && !bt_mac.equals("")){
+        } else {
+            if (bt_mac != null && !bt_mac.equals("")) {
                 //connectAddress.setText(getString(R.string.str_address)+ bt_mac);
                 //connectState.setText(R.string.disconnect);
                 //connectName.setText(getString(R.string.str_name)+bt_name);
-            }else if(bt_mac==null ) {
+            } else if (bt_mac == null) {
                 //bt_mac= BluetoothPort.getmDeviceAddress();
                 //bt_name=BluetoothPort.getmDeviceName();
                 //connectAddress.setText(getString(R.string.str_address)+bt_mac);
@@ -961,7 +995,7 @@ String sql = "INSERT INTO `carpark`.`exit_trans` (`pkid`, `void`, `voidRefID`, `
         }
     }
 
-    private void initDialog(){
+    private void initDialog() {
         GLOBALS.getInstance().setDialog(new ProgressDialog(context));
         GLOBALS.getInstance().getDialog().setProgressStyle(ProgressDialog.STYLE_SPINNER);
         GLOBALS.getInstance().getDialog().setTitle("Connecting...");
@@ -971,11 +1005,11 @@ String sql = "INSERT INTO `carpark`.`exit_trans` (`pkid`, `void`, `voidRefID`, `
         //GLOBALS.getInstance().setDialog(dialog);
     }
 
-    private void printBTText(String text){
-        if(!GLOBALS.getInstance().isConnected() && GLOBALS.getInstance().getmPrinter() == null) {
+    private void printBTText(String text) {
+        if (!GLOBALS.getInstance().isConnected() && GLOBALS.getInstance().getmPrinter() == null) {
             return;
         }
-        new Thread(){
+        new Thread() {
             @Override
             public void run() {
                 PrintUtils.printBTText(GLOBALS.getInstance().getmPrinter(), "This is a Test");
@@ -983,14 +1017,14 @@ String sql = "INSERT INTO `carpark`.`exit_trans` (`pkid`, `void`, `voidRefID`, `
         }.start();
     }
 
-    private void printUpdate(final String filePath){
-        if(!GLOBALS.getInstance().isConnected() && GLOBALS.getInstance().getmPrinter() == null) {
+    private void printUpdate(final String filePath) {
+        if (!GLOBALS.getInstance().isConnected() && GLOBALS.getInstance().getmPrinter() == null) {
             return;
         }
         GLOBALS.getInstance().getDialog().setTitle(null);
         GLOBALS.getInstance().getDialog().setMessage("正在升级, 请稍后...");
         GLOBALS.getInstance().getDialog().show();
-        new Thread(){
+        new Thread() {
             @Override
             public void run() {
                 //PrintUtils.printUpdate(context.getResources(), GLOBALS.getInstance().getmPrinter(), filePath);
@@ -1005,7 +1039,8 @@ String sql = "INSERT INTO `carpark`.`exit_trans` (`pkid`, `void`, `voidRefID`, `
         }.start();
 
     }
-    private Handler mHandler = new Handler(){
+
+    private Handler mHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
             switch (msg.what) {
@@ -1039,7 +1074,6 @@ String sql = "INSERT INTO `carpark`.`exit_trans` (`pkid`, `void`, `voidRefID`, `
     private String bt_name;
 
 
-
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -1066,12 +1100,12 @@ String sql = "INSERT INTO `carpark`.`exit_trans` (`pkid`, `void`, `voidRefID`, `
         return false;
     }
 
-    private void startSelectFile(){
-        if(!GLOBALS.getInstance().isConnected() && GLOBALS.getInstance().getmPrinter() == null) {
+    private void startSelectFile() {
+        if (!GLOBALS.getInstance().isConnected() && GLOBALS.getInstance().getmPrinter() == null) {
             return;
         }
 
-        if(hasSDcardPermissions()){
+        if (hasSDcardPermissions()) {
             Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
             intent.setType("*/*");
             intent.addCategory(Intent.CATEGORY_OPENABLE);
@@ -1112,19 +1146,35 @@ String sql = "INSERT INTO `carpark`.`exit_trans` (`pkid`, `void`, `voidRefID`, `
         //String jsonStr = sh.makeServiceCall(url);
         final JSONObject c;
         try {
+            System.out.println("ANGELO Start grabCardFromServer");
             c = new JSONObject(msg);
 
             // tmp hash map for single contact
             HashMap<String, String> cardData = new HashMap<>();
 
             // adding each child node to HashMap key => value
+            cardData.put(CARD_COLUMN_VEHICLE, c.getString(CARD_COLUMN_VEHICLE));
+            System.out.println("ANGELO Vehicle is Set " + cardData.get("CARD_COLUMN_VEHICLE"));
+            if (cardData.get(CARD_COLUMN_VEHICLE).compareToIgnoreCase("VIPDOCTOR") == 0) {
+                cardData.put("firstName", c.getString("firstName"));
+                System.out.println("ANGELO firstName is Set" + cardData.get("firstName"));
+                cardData.put("lastName", c.getString("lastName"));
+                System.out.println("ANGELO lastName is Set");
+                cardData.put("plates", c.getString("plates"));
+                System.out.println("ANGELO plates is Set");
+                cardData.put("vehicletypes", c.getString("vehicletypes"));
+                System.out.println("ANGELO vehicletypes is Set");
+                cardData.put("Timein", c.getString("Timein"));
+                System.out.println("ANGELO Timein is Set" + cardData.get("Timein"));
+                return cardData;
+            }
+
             cardData.put(CARD_COLUMN_CARDCODE, c.getString(CARD_COLUMN_CARDCODE));
             cardData.put(CARD_COLUMN_LANE, c.getString(CARD_COLUMN_LANE));
             cardData.put(CARD_COLUMN_PC, c.getString(CARD_COLUMN_PC));
             cardData.put(CARD_COLUMN_PLATE, c.getString(CARD_COLUMN_PLATE));
             cardData.put(CARD_COLUMN_VEHICLE, c.getString(CARD_COLUMN_VEHICLE));
             cardData.put(CARD_COLUMN_TIMEIN, c.getString(CARD_COLUMN_TIMEIN));
-            cardData.put("TimeOut", c.getString("TimeOut"));
 
             // adding contact to contact
             //sendmessage(c.getString("id") + " : " + c.getString("name") + " : " + c.getString("email") + " : " + c.getString("mobile"));
@@ -1146,8 +1196,8 @@ String sql = "INSERT INTO `carpark`.`exit_trans` (`pkid`, `void`, `voidRefID`, `
             System.out.println("ANGELO : diffInMills=" + diffInMills);
 
             //final long diffMins = TimeUnit.MINUTES.convert(diffInMills, TimeUnit.MILLISECONDS);
-           // final long diffHours = TimeUnit.HOURS.convert(diffMins, TimeUnit.MINUTES);
-           // final long diffDays = TimeUnit.DAYS.convert(diffHours, TimeUnit.HOURS);
+            // final long diffHours = TimeUnit.HOURS.convert(diffMins, TimeUnit.MINUTES);
+            // final long diffDays = TimeUnit.DAYS.convert(diffHours, TimeUnit.HOURS);
 
             final long secondsElapsed = diffInMills / 1000;
             int minutesElapsed = (int) (secondsElapsed / 60);
@@ -1173,7 +1223,7 @@ String sql = "INSERT INTO `carpark`.`exit_trans` (`pkid`, `void`, `voidRefID`, `
 
                         datetimeIN.setText(dtIN);
                         datetimeOUT.setText(dtOUT);
-                        durationElapsed.setText(daysElapsed + " days "  + hrsRemaining + " hours " + minsRemaining + " mins ");
+                        durationElapsed.setText(daysElapsed + " days " + hrsRemaining + " hours " + minsRemaining + " mins ");
 
                         GLOBALS.getInstance().setDatetimeIN(dtIN);
                         GLOBALS.getInstance().setDatetimeOUT(dtOUT);
@@ -1189,7 +1239,7 @@ String sql = "INSERT INTO `carpark`.`exit_trans` (`pkid`, `void`, `voidRefID`, `
 
             //For Rooted Systems only
             //changeSystemTime(nowFromServer.getYear() + "",nowFromServer.getMonth() + "",nowFromServer.getDate() + "",nowFromServer.getHours() + "",
-             //       nowFromServer.getMinutes()+"",nowFromServer.getSeconds()+"");
+            //       nowFromServer.getMinutes()+"",nowFromServer.getSeconds()+"");
             //String cardID, String parkerType, String plateNumber, String name, String cardNumber, int maxUse, int status, String ldc, String ldm)
             //boolean inserted = dbh.insertParkerCard(c.getString(CARD_COLUMN_CARDCODE), c.getString(CARD_COLUMN_VEHICLE), c.getString(CARD_COLUMN_PLATE),
             //        c.getString(CARD_COLUMN_LANE), c.getString(CARD_COLUMN_PC), c.getString(CARD_COLUMN_TIMEIN));
@@ -1201,13 +1251,13 @@ String sql = "INSERT INTO `carpark`.`exit_trans` (`pkid`, `void`, `voidRefID`, `
 
     }
 
-    private void changeSystemTime(String year,String month,String day,String hour,String minute,String second){
+    private void changeSystemTime(String year, String month, String day, String hour, String minute, String second) {
         try {
 
             Process process = Runtime.getRuntime().exec("su");
             DataOutputStream os = new DataOutputStream(process.getOutputStream());
             //MMddhhmmyy
-            String command = "date "+month+day+hour+minute+year+"\n";
+            String command = "date " + month + day + hour + minute + year + "\n";
             // Log.e("command",command);
             os.writeBytes(command);
             os.flush();

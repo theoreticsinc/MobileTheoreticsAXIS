@@ -57,7 +57,7 @@ public class ComputeAPI {
                     AmountDue = flatRate + ((hoursElapsed - firstHourCharge) * succeedingRate);
                 }
                 else {
-                    AmountDue = flatRate + succeedingRate + ((hoursElapsed - firstHourCharge + 1) * succeedingRate);
+                    AmountDue = flatRate + ((hoursElapsed - firstHourCharge + 1) * succeedingRate);
                 }
             }
             vat12 = getVat(AmountDue);
@@ -87,7 +87,7 @@ public class ComputeAPI {
                     AmountDue = flatRate + ((hoursElapsed - firstHourCharge) * succeedingRate);
                 }
                 else {
-                    AmountDue = flatRate + succeedingRate + ((hoursElapsed - firstHourCharge + 1) * succeedingRate);
+                    AmountDue = flatRate + ((hoursElapsed - firstHourCharge + 1) * succeedingRate);
                 }
             }
             vat12 = getVat(AmountDue);

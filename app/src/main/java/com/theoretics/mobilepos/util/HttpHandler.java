@@ -91,7 +91,8 @@ public class HttpHandler {
 
                     //Opening the URL using HttpURLConnection
                     HttpURLConnection con = (HttpURLConnection) url.openConnection();
-
+                    if (null == con)
+                        return null;
                     //StringBuilder object to read the string from the service
                     StringBuilder sb = new StringBuilder();
 
@@ -111,6 +112,11 @@ public class HttpHandler {
                     }
                     System.out.println("ANGELO : [" + i + "]" + sb.toString());
                     //finally returning the read string
+//                    if (json.compareToIgnoreCase("ok") == 0) {
+                        //force
+//                        dbh.updateLDM(EXIT_TABLE_NAME, ldm);
+//                    }
+                    dbh.updateLDM(EXIT_TABLE_NAME, ldm);
 
                     //retJSON[0] = readJSON(json);
                     //Date now = new Date();

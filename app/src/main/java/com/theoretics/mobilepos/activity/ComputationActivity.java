@@ -49,7 +49,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Timer;
 
-import static com.theoretics.mobilepos.util.DBHelper.SERVER_NAME;
+import static com.theoretics.mobilepos.bean.CONSTANTS.SERVER_NAME;
+
 
 public class ComputationActivity extends BaseActivity implements
         com.theoretics.ui.MyPagerAdapter.notify, SwipeListener {

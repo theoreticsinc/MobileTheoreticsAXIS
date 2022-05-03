@@ -172,7 +172,7 @@ public class ComputationActivity extends BaseActivity implements
         GLOBALS.getInstance().setMinutesElapsed(minsRemaining + "");
         RECEIPT.getInstance().setHoursElapsed(hrsRemaining + "");
         RECEIPT.getInstance().setMinutesElapsed(minsRemaining + "");
-        GLOBALS.getInstance().setExitID(CONSTANTS.getInstance().getExitID());
+        //RECEIPT.getInstance().setEntID(CONSTANTS.getInstance().getEntID());
         RECEIPT.getInstance().setExitID(CONSTANTS.getInstance().getExitID());
         RECEIPT.getInstance().setPlateNum(GLOBALS.getInstance().getPlateNum());
         RECEIPT.getInstance().setCardNumber(GLOBALS.getInstance().getCardNumber());
@@ -260,11 +260,28 @@ public class ComputationActivity extends BaseActivity implements
             public void onClick(View view) {
                 //printText_test1();
                 if (GLOBALS.getInstance().getDatetimeIN().length() > 0) {
-                    if (GLOBALS.getInstance().isNewCard() == true) {
+                    if (GLOBALS.getInstance().isNewCard() == true && GLOBALS.getInstance().isPressed() == false) {
+                        GLOBALS.getInstance().setPressed(true);
                         printOriginalReceipt();
                         printOrigBTReceipt();
+                        updateXRead();
+                        final double grand = updateGrandTotal(GLOBALS.getInstance().getAmountDue());
+                        final double gross = updateGrossTotal(GLOBALS.getInstance().getAmountGross());
+
+                        new Thread() {
+                            @Override
+                            public void run() {
+                                DBHelper dbh = new DBHelper(getApplicationContext());
+                                HttpHandler sh = new HttpHandler(dbh);
+                                sh.makeAmbulatory2Server(SERVER_NAME + "/cardAMBExit.php?rfid=", GLOBALS.getInstance().getCardNumber());
+                                sh.sendGRAND2Server(SERVER_NAME + "/general/masters.php?terminalID="+CONSTANTS.getInstance().getExitID()+"&rawText=$", RECEIPT.getInstance().getReceiptNum() + "; " + gross + "; " + grand + " date:");
+                           }
+                        }.start();
+
+                        GLOBALS.getInstance().setPressed(false);
                         String eJournal = getReceiptData();
                         saveRec2Server(eJournal);
+
                     } else {
                         if (null == GLOBALS.getInstance().getMyOperation().getPrinter() || GLOBALS.getInstance().getMyOperation().getPrinter().isConnected() == false) {
                             connClick();
@@ -1003,6 +1020,35 @@ public class ComputationActivity extends BaseActivity implements
             printNsave("", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
             printNsave("", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
             printNsave("", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+            updateReceiptNumber();
+
+            GLOBALS.getInstance().setNewCard(false);
+            saveTransaction(RECEIPT.getInstance().getReceiptNum(),
+                    RECEIPT.getInstance().getCashierName(),
+                    RECEIPT.getInstance().getEntID(),
+                    RECEIPT.getInstance().getExitID(),
+                    RECEIPT.getInstance().getCardNumber(),
+                    RECEIPT.getInstance().getPlateNum(),
+                    RECEIPT.getInstance().getpType(),
+                    RECEIPT.getInstance().getNetOfDiscount(),
+                    RECEIPT.getInstance().getAmountDue() + "",
+                    RECEIPT.getInstance().getAmountGross(),
+                    RECEIPT.getInstance().getDiscount(),
+                    RECEIPT.getInstance().getVatAdjustment(),
+                    RECEIPT.getInstance().getVat12(),
+                    RECEIPT.getInstance().getVatsale(),
+                    RECEIPT.getInstance().getVatExemptedSales(),
+                    RECEIPT.getInstance().getTendered(),
+                    RECEIPT.getInstance().getChangeDue(),
+                    RECEIPT.getInstance().getDatetimeIN(),
+                    RECEIPT.getInstance().getDatetimeOUT(),
+                    RECEIPT.getInstance().getHoursElapsed(),
+                    RECEIPT.getInstance().getMinutesElapsed(),
+                    RECEIPT.getInstance().getSettlementRef(),
+                    RECEIPT.getInstance().getSettlementName(),
+                    RECEIPT.getInstance().getSettlementAddr(),
+                    RECEIPT.getInstance().getSettlementTIN(),
+                    RECEIPT.getInstance().getSettlementBusStyle());
 
             printerDev.printText(obj2Print, new AidlPrinterListener.Stub() {
 
@@ -1010,90 +1056,30 @@ public class ComputationActivity extends BaseActivity implements
                 public void onPrintFinish() throws RemoteException {
                     //String endTime = getCurTime();
                     //sendmessage(getStringByid(R.string.print_end) + endTime);
-                    updateReceiptNumber();
-                    GLOBALS.getInstance().setNewCard(false);
-                    saveTransaction(RECEIPT.getInstance().getReceiptNum(),
-                            RECEIPT.getInstance().getCashierName(),
-                            RECEIPT.getInstance().getEntID(),
-                            RECEIPT.getInstance().getExitID(),
-                            RECEIPT.getInstance().getCardNumber(),
-                            RECEIPT.getInstance().getPlateNum(),
-                            RECEIPT.getInstance().getpType(),
-                            RECEIPT.getInstance().getNetOfDiscount(),
-                            RECEIPT.getInstance().getAmountDue() + "",
-                            RECEIPT.getInstance().getAmountGross(),
-                            RECEIPT.getInstance().getDiscount(),
-                            RECEIPT.getInstance().getVatAdjustment(),
-                            RECEIPT.getInstance().getVat12(),
-                            RECEIPT.getInstance().getVatsale(),
-                            RECEIPT.getInstance().getVatExemptedSales(),
-                            RECEIPT.getInstance().getTendered(),
-                            RECEIPT.getInstance().getChangeDue(),
-                            RECEIPT.getInstance().getDatetimeIN(),
-                            RECEIPT.getInstance().getDatetimeOUT(),
-                            RECEIPT.getInstance().getHoursElapsed(),
-                            RECEIPT.getInstance().getMinutesElapsed(),
-                            RECEIPT.getInstance().getSettlementRef(),
-                            RECEIPT.getInstance().getSettlementName(),
-                            RECEIPT.getInstance().getSettlementAddr(),
-                            RECEIPT.getInstance().getSettlementTIN(),
-                            RECEIPT.getInstance().getSettlementBusStyle());
-
-                    updateXRead();
-                    double grand = updateGrandTotal(GLOBALS.getInstance().getAmountDue());
-                    double gross = updateGrossTotal(GLOBALS.getInstance().getAmountGross());
-                    DBHelper dbh = new DBHelper(getApplicationContext());
-                    HttpHandler sh = new HttpHandler(dbh);
-                    sh.makeAmbulatory2Server(SERVER_NAME + "/cardAMBExit.php?rfid=", RECEIPT.getInstance().getCardNumber());
-                    sh.sendGRAND2Server(SERVER_NAME + "/general/masters.php?terminalID="+CONSTANTS.getInstance().getExitID()+"&rawText=$", RECEIPT.getInstance().getReceiptNum() + "; " + gross + "; " + grand + " date:");
-
                 }
 
                 @Override
                 public void onError(int arg0) throws RemoteException {
                     //sendmessage(getStringByid(R.string.print_faile_errcode) + arg0);
-                    updateReceiptNumber();
-                    GLOBALS.getInstance().setNewCard(false);
-                    saveTransaction(RECEIPT.getInstance().getReceiptNum(),
-                            RECEIPT.getInstance().getCashierName(),
-                            RECEIPT.getInstance().getEntID(),
-                            RECEIPT.getInstance().getExitID(),
-                            RECEIPT.getInstance().getCardNumber(),
-                            RECEIPT.getInstance().getPlateNum(),
-                            RECEIPT.getInstance().getpType(),
-                            RECEIPT.getInstance().getNetOfDiscount(),
-                            RECEIPT.getInstance().getAmountDue() + "",
-                            RECEIPT.getInstance().getAmountGross(),
-                            RECEIPT.getInstance().getDiscount(),
-                            RECEIPT.getInstance().getVatAdjustment(),
-                            RECEIPT.getInstance().getVat12(),
-                            RECEIPT.getInstance().getVatsale(),
-                            RECEIPT.getInstance().getVatExemptedSales(),
-                            RECEIPT.getInstance().getTendered(),
-                            RECEIPT.getInstance().getChangeDue(),
-                            RECEIPT.getInstance().getDatetimeIN(),
-                            RECEIPT.getInstance().getDatetimeOUT(),
-                            RECEIPT.getInstance().getHoursElapsed(),
-                            RECEIPT.getInstance().getMinutesElapsed(),
-                            RECEIPT.getInstance().getSettlementRef(),
-                            RECEIPT.getInstance().getSettlementName(),
-                            RECEIPT.getInstance().getSettlementAddr(),
-                            RECEIPT.getInstance().getSettlementTIN(),
-                            RECEIPT.getInstance().getSettlementBusStyle());
-
-                    updateXRead();
-                    double grand = updateGrandTotal(GLOBALS.getInstance().getAmountDue());
-                    double gross = updateGrossTotal(GLOBALS.getInstance().getAmountGross());
-                    DBHelper dbh = new DBHelper(getApplicationContext());
-                    HttpHandler sh = new HttpHandler(dbh);
-                    sh.makeAmbulatory2Server(SERVER_NAME + "/cardAMBExit.php?rfid=", RECEIPT.getInstance().getCardNumber());
-                    sh.sendGRAND2Server(SERVER_NAME + "/general/masters.php?terminalID="+CONSTANTS.getInstance().getExitID()+"&rawText=", RECEIPT.getInstance().getReceiptNum() + "; " + gross + "; " + grand + "$");
-                    finish();
+                    //finish();
+                    if (null == GLOBALS.getInstance().getMyOperation().getPrinter() || GLOBALS.getInstance().getMyOperation().getPrinter().isConnected() == false) {
+                        connClick();
+                    }
                 }
 
             });
+/*
+            updateXRead();
+            double grand = updateGrandTotal(GLOBALS.getInstance().getAmountDue());
+            double gross = updateGrossTotal(GLOBALS.getInstance().getAmountGross());
+            DBHelper dbh = new DBHelper(getApplicationContext());
+            HttpHandler sh = new HttpHandler(dbh);
+            sh.makeAmbulatory2Server(SERVER_NAME + "/cardAMBExit.php?rfid=", GLOBALS.getInstance().getCardNumber());
+            sh.sendGRAND2Server(SERVER_NAME + "/general/masters.php?terminalID="+CONSTANTS.getInstance().getExitID()+"&rawText=$", RECEIPT.getInstance().getReceiptNum() + "; " + gross + "; " + grand + " date:");
+            GLOBALS.getInstance().setPressed(false);
 
-        } catch (RemoteException e) {
+ */
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -1254,16 +1240,23 @@ public class ComputationActivity extends BaseActivity implements
     }
 
     private void saveReceipt2Memory(String recNum) {
+        GLOBALS.getInstance().setExitID(CONSTANTS.getInstance().getExitID());
+
+        RECEIPT.getInstance().resetRECEIPT();
+
         RECEIPT.getInstance().setReceiptNum(recNum);
         RECEIPT.getInstance().setEntID(GLOBALS.getInstance().getEntID());
         RECEIPT.getInstance().setCashierName(GLOBALS.getInstance().getCashierName());
         RECEIPT.getInstance().setExitID(GLOBALS.getInstance().getExitID());
         RECEIPT.getInstance().setPlateNum(GLOBALS.getInstance().getPlateNum());
+        RECEIPT.getInstance().setCardNumber(GLOBALS.getInstance().getCardNumber());
         RECEIPT.getInstance().setpType(GLOBALS.getInstance().getpType());
         RECEIPT.getInstance().setpTypeName(GLOBALS.getInstance().getpTypeName());
         RECEIPT.getInstance().setDatetimeIN(GLOBALS.getInstance().getDatetimeIN());
         RECEIPT.getInstance().setDatetimeOUT(GLOBALS.getInstance().getDatetimeOUT());
         RECEIPT.getInstance().setDuration(GLOBALS.getInstance().getDuration());
+        RECEIPT.getInstance().setHoursElapsed(GLOBALS.getInstance().getHoursElapsed() + "");
+        RECEIPT.getInstance().setMinutesElapsed(GLOBALS.getInstance().getMinutesElapsed() + "");
 
         RECEIPT.getInstance().setDiscounted(isDiscounted);
         RECEIPT.getInstance().setAmountGross(ca.AmountGross + "");
@@ -1281,6 +1274,7 @@ public class ComputationActivity extends BaseActivity implements
             RECEIPT.getInstance().setNetOfVATDbl(ca.NetOfVAT);
             RECEIPT.getInstance().setDiscountDbl(ca.discount);
             RECEIPT.getInstance().setNetOfDiscountDbl((ca.NetOfVAT - ca.discount));
+            RECEIPT.getInstance().setVatsale((ca.NetOfVAT - ca.discount) + "");
 
         } else if (isDiscounted == false) {
             RECEIPT.getInstance().setVatsale(ca.vatsale + "");

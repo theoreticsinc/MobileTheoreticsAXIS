@@ -133,6 +133,13 @@ public class ParkingExitActivity extends BaseActivity implements EasyPermission.
         initView();
         dbh = new DBHelper(this);
 
+        //For Corrections
+        //dbh.updateExitID("2022-02-01 01:40:00", "AB02");
+
+        //String n = "2022-02-01 01:40:00";
+        //dbh.updateLDM(EXIT_TABLE_NAME, n);
+        //----------------------------------------------
+
         checkLog();
 
         if (Build.VERSION.SDK_INT >= 23) {
@@ -433,7 +440,7 @@ public class ParkingExitActivity extends BaseActivity implements EasyPermission.
 
                     //if (null != retStr) {
                         //force
-                        dbh.updateLDM(EXIT_TABLE_NAME, s);
+                    //    dbh.updateLDM(EXIT_TABLE_NAME, s);
                     //}
                     data4uploading.moveToNext();
                 }

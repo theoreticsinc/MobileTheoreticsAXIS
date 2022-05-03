@@ -1,6 +1,9 @@
 package com.theoretics.mobilepos.activity;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.support.design.widget.FloatingActionButton;
@@ -25,6 +28,9 @@ import com.topwise.cloudpos.aidl.printer.AidlPrinterListener;
 import com.topwise.cloudpos.aidl.printer.PrintItemObj;
 import com.topwise.cloudpos.data.PrinterConstant;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -36,6 +42,8 @@ public class LogoutActivity extends BaseActivity {
     View containme = null;
     private boolean alreadyXPrinted = false;
     private boolean alreadyZPrinted = false;
+    private AlertDialog.Builder dialogBuilder;
+    private AlertDialog alertDialog;
 
     private AidlPrinter printerDev = null;
     private AidlDeviceService deviceManager = null;
@@ -60,6 +68,9 @@ public class LogoutActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_logout);
+        dialogBuilder = new AlertDialog.Builder(this);
+        buildAlertDialog();
+
         //Toolbar toolbar = findViewById(R.id.toolbar);
         //setSupportActionBar(toolbar);
         dbh = new DBHelper(getApplicationContext());
@@ -70,18 +81,7 @@ public class LogoutActivity extends BaseActivity {
             public void onClick(View view) {
                 //Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                 //        .setAction("Action", null).show();
-                if(dbh.validateLogout(loginUsername.getText().toString(), loginPassword.getText().toString())) {
-                    loginUsername.setText("success");
-                    loginPassword.setText("success");
-                    //dbh.saveLogin();
-                    Toast.makeText(getApplicationContext(), "PRINTING Zread...Please wait.", Toast.LENGTH_SHORT).show();
-                    logoutIfValid(true);
-                    //printout12thZRead();
-                } else {
-                    loginUsername.setText("");
-                    loginPassword.setText("");
-                    Toast.makeText(getApplicationContext(), "Wrong Username/Password. Please Try again.", Toast.LENGTH_SHORT).show();
-                }
+                new CheckServer().execute("logout");
             }
         });
         initView();
@@ -105,8 +105,8 @@ public class LogoutActivity extends BaseActivity {
             @Override
             public void onClick(View view) {
                 //dbh = new DBHelper(getApplicationContext());
-                if (GLOBALS.getInstance().getCashierName().compareTo(loginUsername.getText().toString()) == 0 ) {
-                    if(dbh.validateLogout(loginUsername.getText().toString(), loginPassword.getText().toString())) {
+                if (GLOBALS.getInstance().getCashierName().compareTo(loginUsername.getText().toString()) == 0) {
+                    if (dbh.validateLogout(loginUsername.getText().toString(), loginPassword.getText().toString())) {
                         loginUsername.setText("success");
                         loginPassword.setText("success");
                         //dbh.saveLogin();
@@ -196,7 +196,7 @@ public class LogoutActivity extends BaseActivity {
         ZREADING.getInstance().setEndingGross(Double.parseDouble(endGross));
 
         //if (forPrinting)
-            printXRead(forZPrinting);
+        printXRead(forZPrinting);
 
     }
 
@@ -274,6 +274,11 @@ public class LogoutActivity extends BaseActivity {
             printNsave("Dialysis Parkers    :" + XREADING.getInstance().getDialysisCount() + "   " + df2.format(XREADING.getInstance().getDialysisAmount()), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
             printNsave("", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
 
+            printNsave("Teller   : " + GLOBALS.getInstance().getCashierID(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+            printNsave("**Log In : " + XREADING.getInstance().getLogInDateTime(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+            printNsave("Log Out  : " + XREADING.getInstance().getLogOutDateTime(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+            printNsave("D/T Print: " + XREADING.getInstance().getLogOutDateTime(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+
             printNsave("VATable Sales       :" + df2.format(XREADING.getInstance().getVATableSales()), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
             printNsave("VAT Amount(12%)     :" + df2.format(XREADING.getInstance().getVAT12()), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
             printNsave("VAT Exempt Sales    :" + "0.00", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
@@ -285,6 +290,11 @@ public class LogoutActivity extends BaseActivity {
             printNsave("LocalSenior DSC Cnt :" + XREADING.getInstance().getLocalSeniorDscCount(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
             printNsave("LocalSenior DSC Amt :" + df2.format(XREADING.getInstance().getLocalSeniorDscAmount()), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
             printNsave("", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+
+            printNsave("Teller   : " + GLOBALS.getInstance().getCashierID(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+            printNsave("**Log In : " + XREADING.getInstance().getLogInDateTime(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+            printNsave("Log Out  : " + XREADING.getInstance().getLogOutDateTime(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+            printNsave("D/T Print: " + XREADING.getInstance().getLogOutDateTime(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
 
             printNsave("Total GROSS Amt:" + df2.format(XREADING.getInstance().getTodaysGrossColl()), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
             printNsave("Total Cash Coll:" + df2.format(XREADING.getInstance().getTodaysCollection()), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
@@ -299,6 +309,11 @@ public class LogoutActivity extends BaseActivity {
             printNsave("Beginning Gross:" + df2.format(ZREADING.getInstance().getBeginGross()), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
             printNsave("Ending Gross   :" + df2.format(ZREADING.getInstance().getEndingGross()), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
             printNsave("", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+
+            printNsave("Teller   : " + GLOBALS.getInstance().getCashierID(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+            printNsave("**Log In : " + XREADING.getInstance().getLogInDateTime(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+            printNsave("Log Out  : " + XREADING.getInstance().getLogOutDateTime(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
+            printNsave("D/T Print: " + XREADING.getInstance().getLogOutDateTime(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
 
             printNsave("Teller Sign   : _____________________", PrinterConstant.FontSize.SMALL, false, PrintItemObj.ALIGN.CENTER);
             printNsave("Supervisor    : _____________________", PrinterConstant.FontSize.SMALL, false, PrintItemObj.ALIGN.CENTER);
@@ -561,6 +576,101 @@ public class LogoutActivity extends BaseActivity {
         } catch (RemoteException e) {
             e.printStackTrace();
         }
+    }
+
+
+    private static boolean isReachable(String addr, int openPort, int timeOutMillis) {
+        // Any Open port on other machine
+        // openPort =  22 - ssh, 80 or 443 - webserver, 25 - mailserver etc.
+        try (Socket soc = new Socket()) {
+            soc.connect(new InetSocketAddress(addr, openPort), timeOutMillis);
+            return true;
+        } catch (IOException ex) {
+            return false;
+        }
+    }
+
+    private class CheckServer extends AsyncTask<String, Integer, String> {
+
+        @Override
+        protected String doInBackground(String... params) {
+            String my = params[0];
+            int i = 0;
+            publishProgress(i);
+            try {
+                //CONSTANTS.SERVER_NAME
+                if (isReachable(CONSTANTS.SERVER_ADDR, 80, 1000)) {
+
+                    if (dbh.validateLogout(loginUsername.getText().toString(), loginPassword.getText().toString())) {
+                        loginUsername.setText("success");
+                        loginPassword.setText("success");
+                        //dbh.saveLogin();
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(getApplicationContext(), "PRINTING Zread...Please wait.", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                        logoutIfValid(true);
+                        //printout12thZRead();
+                    } else {
+                        loginUsername.setText("");
+                        loginPassword.setText("");
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(getApplicationContext(), "Wrong Username/Password. Please Try again.", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
+                } else {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (!alertDialog.isShowing())
+                                alertDialog.show();
+                        }
+                    });
+                    //Toast.makeText(getApplicationContext(), "You are not connected to the network. Please Try again.", Toast.LENGTH_SHORT).show();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            return "Checked";
+        }
+
+        protected void onProgressUpdate(Integer... values) {
+
+        }
+
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
+        }
+    }
+
+    private void buildAlertDialog() {
+        dialogBuilder.setMessage("You are not connected to the server. Try Again?");
+        dialogBuilder.setTitle("Network is Needed");
+        dialogBuilder.setPositiveButton("Yes",
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog,
+                                        int which) {
+                        Toast.makeText(getApplicationContext(), "Yes is clicked", Toast.LENGTH_LONG).show();
+                    }
+                });
+        dialogBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Toast.makeText(getApplicationContext(), "Turn On WIFI / Find a better signal", Toast.LENGTH_LONG).show();
+            }
+        });
+        alertDialog = dialogBuilder.create();
+
     }
 
 }

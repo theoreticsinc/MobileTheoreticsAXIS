@@ -1036,7 +1036,7 @@ public class VIPCardActivity extends BaseActivity {
         @Override
         protected String doInBackground(String... params) {
             publishProgress("initializing DB..."); // Calls onProgressUpdate()
-            dbh.initCardDatabase();
+            //dbh.initCardDatabase();
             return "Done";
         }
 

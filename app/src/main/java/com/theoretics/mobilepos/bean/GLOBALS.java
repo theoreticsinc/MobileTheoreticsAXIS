@@ -49,6 +49,8 @@ public class GLOBALS {
     private double vatExemptedSales = 0;
     private double vatAdjustment = 0;
 
+    private boolean isPressed = false;
+
     public GLOBALS(){}
 
     public static IPrinterOperation getMyOperation() {
@@ -316,6 +318,14 @@ public class GLOBALS {
 
     public void setReceiptCopyType(String receiptCopyType) {
         this.receiptCopyType = receiptCopyType;
+    }
+
+    public boolean isPressed() {
+        return isPressed;
+    }
+
+    public void setPressed(boolean pressed) {
+        isPressed = pressed;
     }
 
     public static synchronized GLOBALS getInstance() {

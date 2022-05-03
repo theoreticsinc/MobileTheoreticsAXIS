@@ -23,23 +23,23 @@ public class RECEIPT {
     private String datetimeOUT = "";
     private String duration = "";
 
-    private String amountGross = "";
-    private String discount = "";
+    private String amountGross = "0";
+    private String discount = "0";
 
     private double amountGrossDbl = 0;
     private double discountDbl = 0;
 
     boolean isDiscounted = false;
-    private String tendered = "";
-    private String changeDue = "";
-    private String AmountDue = "";
-    private String AmountGross = "";
-    private String NetOfVAT = "";
-    private String NetOfDiscount = "";
-    private String vat12 = "";
-    private String vatsale = "";
-    private String vatExemptedSales = "";
-    private String vatAdjustment = "";
+    private String tendered = "0";
+    private String changeDue = "0";
+    private String AmountDue = "0";
+    private String AmountGross = "0";
+    private String NetOfVAT = "0";
+    private String NetOfDiscount = "0";
+    private String vat12 = "0";
+    private String vatsale = "0";
+    private String vatExemptedSales = "0";
+    private String vatAdjustment = "0";
 
     private double AmountDueDbl = 0;
     private double AmountGrossDbl = 0;
@@ -63,6 +63,10 @@ public class RECEIPT {
             instance = new RECEIPT();
         }
         return instance;
+    }
+
+    public void resetRECEIPT() {
+        instance = new RECEIPT();
     }
 
     public String getCardNumber() {

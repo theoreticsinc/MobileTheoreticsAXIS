@@ -98,7 +98,7 @@ public class ComputationActivity extends BaseActivity implements
     //private Button testBtn = null;
 
     private boolean isDiscounted = false;
-    String TRType = "";
+    String TRType = "", recNum = "";
     private ArrayList<PrintItemObj> obj2Print;
 
     ComputeAPI ca = null;
@@ -261,27 +261,75 @@ public class ComputationActivity extends BaseActivity implements
                 //printText_test1();
                 if (GLOBALS.getInstance().getDatetimeIN().length() > 0) {
                     if (GLOBALS.getInstance().isNewCard() == true && GLOBALS.getInstance().isPressed() == false) {
-                        GLOBALS.getInstance().setPressed(true);
-                        printOriginalReceipt();
-                        printOrigBTReceipt();
-                        updateXRead();
-                        final double grand = updateGrandTotal(GLOBALS.getInstance().getAmountDue());
-                        final double gross = updateGrossTotal(GLOBALS.getInstance().getAmountGross());
+                        try {
+                            GLOBALS.getInstance().setPressed(true);
+                            recNum = getReceiptNumber();
+                            saveReceipt2Memory(recNum);
+                            saveOriginalReceipt();
+                            saveTransaction(RECEIPT.getInstance().getReceiptNum(),
+                                    RECEIPT.getInstance().getCashierName(),
+                                    RECEIPT.getInstance().getEntID(),
+                                    RECEIPT.getInstance().getExitID(),
+                                    RECEIPT.getInstance().getCardNumber(),
+                                    RECEIPT.getInstance().getPlateNum(),
+                                    RECEIPT.getInstance().getpType(),
+                                    RECEIPT.getInstance().getNetOfDiscount(),
+                                    RECEIPT.getInstance().getAmountDue() + "",
+                                    RECEIPT.getInstance().getAmountGross(),
+                                    RECEIPT.getInstance().getDiscount(),
+                                    RECEIPT.getInstance().getVatAdjustment(),
+                                    RECEIPT.getInstance().getVat12(),
+                                    RECEIPT.getInstance().getVatsale(),
+                                    RECEIPT.getInstance().getVatExemptedSales(),
+                                    RECEIPT.getInstance().getTendered(),
+                                    RECEIPT.getInstance().getChangeDue(),
+                                    RECEIPT.getInstance().getDatetimeIN(),
+                                    RECEIPT.getInstance().getDatetimeOUT(),
+                                    RECEIPT.getInstance().getHoursElapsed(),
+                                    RECEIPT.getInstance().getMinutesElapsed(),
+                                    RECEIPT.getInstance().getSettlementRef(),
+                                    RECEIPT.getInstance().getSettlementName(),
+                                    RECEIPT.getInstance().getSettlementAddr(),
+                                    RECEIPT.getInstance().getSettlementTIN(),
+                                    RECEIPT.getInstance().getSettlementBusStyle());
+                            updateXRead();
+                            final double grand = updateGrandTotal(GLOBALS.getInstance().getAmountDue());
+                            final double gross = updateGrossTotal(GLOBALS.getInstance().getAmountGross());
+                            try {
+                                new Thread() {
+                                    @Override
+                                    public void run() {
+                                        DBHelper dbh = new DBHelper(getApplicationContext());
+                                        HttpHandler sh = new HttpHandler(dbh);
+                                        sh.makeAmbulatory2Server(SERVER_NAME + "/cardAMBExit.php?rfid=", GLOBALS.getInstance().getCardNumber());
+                                        sh.sendGRAND2Server(SERVER_NAME + "/general/masters.php?terminalID=" + CONSTANTS.getInstance().getExitID() + "&rawText=$", RECEIPT.getInstance().getReceiptNum() + "; " + gross + "; " + grand + " date:");
+                                    }
+                                }.start();
+                            } catch (Exception ex) {
+                                ex.printStackTrace();
+                            }
 
-                        new Thread() {
-                            @Override
-                            public void run() {
-                                DBHelper dbh = new DBHelper(getApplicationContext());
-                                HttpHandler sh = new HttpHandler(dbh);
-                                sh.makeAmbulatory2Server(SERVER_NAME + "/cardAMBExit.php?rfid=", GLOBALS.getInstance().getCardNumber());
-                                sh.sendGRAND2Server(SERVER_NAME + "/general/masters.php?terminalID="+CONSTANTS.getInstance().getExitID()+"&rawText=$", RECEIPT.getInstance().getReceiptNum() + "; " + gross + "; " + grand + " date:");
-                           }
-                        }.start();
-
-                        GLOBALS.getInstance().setPressed(false);
-                        String eJournal = getReceiptData();
-                        saveRec2Server(eJournal);
-
+                            GLOBALS.getInstance().setPressed(false);
+                            String eJournal = getReceiptData();
+                            updateReceiptNumber();
+                            try {
+                                saveRec2Server(eJournal);
+                            } catch (Exception ex) {
+                                ex.printStackTrace();
+                            }
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                        }
+                        try {
+                            printOrigBTReceipt();
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                        }
+                        try {
+                            printOriginalReceipt();
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                        }
                     } else {
                         if (null == GLOBALS.getInstance().getMyOperation().getPrinter() || GLOBALS.getInstance().getMyOperation().getPrinter().isConnected() == false) {
                             connClick();
@@ -298,7 +346,7 @@ public class ComputationActivity extends BaseActivity implements
         //    public void onClick(View view) {
         //        printText_test1();
         //        printOrigBTReceipt();
-                //printBTText();
+        //printBTText();
         //    }
         //});
 
@@ -350,7 +398,7 @@ public class ComputationActivity extends BaseActivity implements
             case CONNECT_DEVICE:
                 if (resultCode == Activity.RESULT_OK) {
                     GLOBALS.getInstance().getDialog().show();
-                    new Thread(new Runnable(){
+                    new Thread(new Runnable() {
                         public void run() {
                             GLOBALS.getInstance().getMyOperation().open(data);
                         }
@@ -358,9 +406,9 @@ public class ComputationActivity extends BaseActivity implements
                 }
                 break;
             case ENABLE_BT:
-                if (resultCode == Activity.RESULT_OK){
+                if (resultCode == Activity.RESULT_OK) {
                     GLOBALS.getInstance().getMyOperation().chooseDevice();
-                }else{
+                } else {
                     Toast.makeText(this, R.string.bt_not_enabled, Toast.LENGTH_SHORT).show();
                 }
         }
@@ -602,6 +650,21 @@ public class ComputationActivity extends BaseActivity implements
 
     private void printNsave(String text, int fontSize, boolean isBold, PrintItemObj.ALIGN align) {
         obj2Print.add(new PrintItemObj(text, fontSize, isBold, align));
+        //rec.appendToFile(text);
+        try {
+            if (isLedOn) {
+                iLed.setLed(false);
+                isLedOn = false;
+            } else {
+                iLed.setLed(true);
+                isLedOn = true;
+            }
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void Nsave(String text) {
         rec.appendToFile(text);
         try {
             if (isLedOn) {
@@ -619,7 +682,7 @@ public class ComputationActivity extends BaseActivity implements
     private void saveRec2Server(String text2bwritten) {
         DBHelper dbh = new DBHelper(getApplicationContext());
         HttpHandler sh = new HttpHandler(dbh);
-        sh.saveRawText2Server(SERVER_NAME + "/general/write2server.php?terminalID="+CONSTANTS.getInstance().getExitID()+"&rawText=", text2bwritten);
+        sh.saveRawText2Server(SERVER_NAME + "/general/write2server.php?terminalID=" + CONSTANTS.getInstance().getExitID() + "&rawText=", text2bwritten);
 
     }
 
@@ -696,58 +759,58 @@ public class ComputationActivity extends BaseActivity implements
         rawReceipt = rawReceipt + "        " + CONSTANTS.getInstance().getMIN() + "$";
         rawReceipt = rawReceipt + "  " + CONSTANTS.getInstance().getPTU() + "$";
 
-        rawReceipt = rawReceipt +"OFFICIAL RECEIPT" + "$";
-        rawReceipt = rawReceipt +"CUSTOMER COPY" + "$";
-        rawReceipt = rawReceipt +"RECEIPT NUM. : " + RECEIPT.getInstance().getReceiptNum() + "$";
-        rawReceipt = rawReceipt +"" + "$";
-        rawReceipt = rawReceipt +"Ent ID.      : " + RECEIPT.getInstance().getEntID() + "$";
-        rawReceipt = rawReceipt +"Cashier Name : " + RECEIPT.getInstance().getCashierName() + "$";
-        rawReceipt = rawReceipt +"Location     : " + RECEIPT.getInstance().getExitID() + "$";
-        rawReceipt = rawReceipt +"Plate Number : " + RECEIPT.getInstance().getPlateNum() + "$";
-        rawReceipt = rawReceipt +"Parker Type  : " + RECEIPT.getInstance().getpTypeName() + "$";
+        rawReceipt = rawReceipt + "OFFICIAL RECEIPT" + "$";
+        rawReceipt = rawReceipt + "CUSTOMER COPY" + "$";
+        rawReceipt = rawReceipt + "RECEIPT NUM. : " + RECEIPT.getInstance().getReceiptNum() + "$";
+        rawReceipt = rawReceipt + "" + "$";
+        rawReceipt = rawReceipt + "Ent ID.      : " + RECEIPT.getInstance().getEntID() + "$";
+        rawReceipt = rawReceipt + "Cashier Name : " + RECEIPT.getInstance().getCashierName() + "$";
+        rawReceipt = rawReceipt + "Location     : " + RECEIPT.getInstance().getExitID() + "$";
+        rawReceipt = rawReceipt + "Plate Number : " + RECEIPT.getInstance().getPlateNum() + "$";
+        rawReceipt = rawReceipt + "Parker Type  : " + RECEIPT.getInstance().getpTypeName() + "$";
         String dtIN = RECEIPT.getInstance().getDatetimeIN().substring(0, RECEIPT.getInstance().getDatetimeIN().length() - 3);
         String dtOUT = RECEIPT.getInstance().getDatetimeOUT().substring(0, RECEIPT.getInstance().getDatetimeOUT().length() - 3);
-        rawReceipt = rawReceipt +"TIME IN      : " + dtIN + "$";
-        rawReceipt = rawReceipt +"TIME OUT     : " + dtOUT + "$";
-        rawReceipt = rawReceipt +"Duration     : " + RECEIPT.getInstance().getDuration() + "$";
-        rawReceipt = rawReceipt +"" + "$";
-            rawReceipt = rawReceipt +"GROSS AMOUNT        " + df2.format(RECEIPT.getInstance().getAmountGrossDbl()) + "$";
+        rawReceipt = rawReceipt + "TIME IN      : " + dtIN + "$";
+        rawReceipt = rawReceipt + "TIME OUT     : " + dtOUT + "$";
+        rawReceipt = rawReceipt + "Duration     : " + RECEIPT.getInstance().getDuration() + "$";
+        rawReceipt = rawReceipt + "" + "$";
+        rawReceipt = rawReceipt + "GROSS AMOUNT        " + df2.format(RECEIPT.getInstance().getAmountGrossDbl()) + "$";
         if (RECEIPT.getInstance().isDiscounted()) {
-            rawReceipt = rawReceipt +"LESS: VAT           " + df2.format(RECEIPT.getInstance().getVat12Dbl()) + "$";
-            rawReceipt = rawReceipt +"NET OF VAT          " + df2.format(RECEIPT.getInstance().getNetOfVATDbl()) + "$";
-            rawReceipt = rawReceipt +"LESS DSC            " + df2.format(RECEIPT.getInstance().getDiscountDbl()) + "$";
-            rawReceipt = rawReceipt +"NET OF DSC          " + df2.format(RECEIPT.getInstance().getNetOfDiscountDbl()) + "$";
-            rawReceipt = rawReceipt +"ADD VAT             " + df2.format(RECEIPT.getInstance().getVat12Dbl()) + "$";
+            rawReceipt = rawReceipt + "LESS: VAT           " + df2.format(RECEIPT.getInstance().getVat12Dbl()) + "$";
+            rawReceipt = rawReceipt + "NET OF VAT          " + df2.format(RECEIPT.getInstance().getNetOfVATDbl()) + "$";
+            rawReceipt = rawReceipt + "LESS DSC            " + df2.format(RECEIPT.getInstance().getDiscountDbl()) + "$";
+            rawReceipt = rawReceipt + "NET OF DSC          " + df2.format(RECEIPT.getInstance().getNetOfDiscountDbl()) + "$";
+            rawReceipt = rawReceipt + "ADD VAT             " + df2.format(RECEIPT.getInstance().getVat12Dbl()) + "$";
         } else if (isDiscounted == false) {
-            rawReceipt = rawReceipt +"VATable Sales       " + df2.format(RECEIPT.getInstance().getVatsaleDbl()) + "$";
-            rawReceipt = rawReceipt +"VAT Amt(12%)        " + df2.format(RECEIPT.getInstance().getVat12Dbl()) + "$";
-            rawReceipt = rawReceipt +"VAT Exempt          " + "0.00" + "$";
-            rawReceipt = rawReceipt +"Zero-Rated          " + "0.00" + "$";
+            rawReceipt = rawReceipt + "VATable Sales       " + df2.format(RECEIPT.getInstance().getVatsaleDbl()) + "$";
+            rawReceipt = rawReceipt + "VAT Amt(12%)        " + df2.format(RECEIPT.getInstance().getVat12Dbl()) + "$";
+            rawReceipt = rawReceipt + "VAT Exempt          " + "0.00" + "$";
+            rawReceipt = rawReceipt + "Zero-Rated          " + "0.00" + "$";
         }
-        rawReceipt = rawReceipt +"------------------------------------------" + "$";
-        rawReceipt = rawReceipt +"TOTAL AMOUNT DUE: " + df2.format(RECEIPT.getInstance().getAmountDueDbl()) + "$";
-        rawReceipt = rawReceipt +"------------------------------------------" + "$";
-        rawReceipt = rawReceipt +"***** CUSTOMER INFO *****" + "$";
-        rawReceipt = rawReceipt +"Customer Name:____________________________" + "$";
-        rawReceipt = rawReceipt +"Addr:_____________________________________" + "$";
-        rawReceipt = rawReceipt +"TIN :_____________________________________" + "$";
-        rawReceipt = rawReceipt +"Business Type:____________________________" + "$";
+        rawReceipt = rawReceipt + "------------------------------------------" + "$";
+        rawReceipt = rawReceipt + "TOTAL AMOUNT DUE: " + df2.format(RECEIPT.getInstance().getAmountDueDbl()) + "$";
+        rawReceipt = rawReceipt + "------------------------------------------" + "$";
+        rawReceipt = rawReceipt + "***** CUSTOMER INFO *****" + "$";
+        rawReceipt = rawReceipt + "Customer Name:____________________________" + "$";
+        rawReceipt = rawReceipt + "Addr:_____________________________________" + "$";
+        rawReceipt = rawReceipt + "TIN :_____________________________________" + "$";
+        rawReceipt = rawReceipt + "Business Type:____________________________" + "$";
 
-        rawReceipt = rawReceipt +"please visit" + "$";
-        rawReceipt = rawReceipt +"www.theoretics.com.ph" + "$";
-        rawReceipt = rawReceipt +"PARKING POS SUPPLIER" + "$";
-        rawReceipt = rawReceipt +"APPLIED MODERN THEORETICS INC." + "$";
-        rawReceipt = rawReceipt +"ACCRED: 0470083988742019071113" + "$";
-        rawReceipt = rawReceipt +"Date Issued: 02/05/2020" + "$";
-        rawReceipt = rawReceipt +"Valid Until: 02/05/2025" + "$";
-        rawReceipt = rawReceipt +CONSTANTS.getInstance().getPTU() + "$";
-        rawReceipt = rawReceipt +"Date Issued: 03/03/2020" + "$";
-        rawReceipt = rawReceipt +"Valid Until: 03/03/2025" + "$";
-        rawReceipt = rawReceipt +"THANK YOU. FOR PARKING" + "$";
+        rawReceipt = rawReceipt + "please visit" + "$";
+        rawReceipt = rawReceipt + "www.theoretics.com.ph" + "$";
+        rawReceipt = rawReceipt + "PARKING POS SUPPLIER" + "$";
+        rawReceipt = rawReceipt + "APPLIED MODERN THEORETICS INC." + "$";
+        rawReceipt = rawReceipt + "ACCRED: 0470083988742019071113" + "$";
+        rawReceipt = rawReceipt + "Date Issued: 02/05/2020" + "$";
+        rawReceipt = rawReceipt + "Valid Until: 02/05/2025" + "$";
+        rawReceipt = rawReceipt + CONSTANTS.getInstance().getPTU() + "$";
+        rawReceipt = rawReceipt + "Date Issued: 03/03/2020" + "$";
+        rawReceipt = rawReceipt + "Valid Until: 03/03/2025" + "$";
+        rawReceipt = rawReceipt + "THANK YOU. FOR PARKING" + "$";
 
-        rawReceipt = rawReceipt +"$";
-        rawReceipt = rawReceipt +"$";
-        rawReceipt = rawReceipt +"$";
+        rawReceipt = rawReceipt + "$";
+        rawReceipt = rawReceipt + "$";
+        rawReceipt = rawReceipt + "$";
 
         return rawReceipt;
     }
@@ -778,7 +841,7 @@ public class ComputationActivity extends BaseActivity implements
         PrintUtils.printBTText("TIME OUT     : " + dtOUT, NORMALFONT, false, 0);
         PrintUtils.printBTText("Duration     : " + RECEIPT.getInstance().getDuration(), NORMALFONT, false, 0);
         PrintUtils.printBTText("", NORMALFONT, false, 0);
-            PrintUtils.printBTText("GROSS AMOUNT        " + df2.format(RECEIPT.getInstance().getAmountGrossDbl()), PrinterConstant.FontSize.LARGE, false, 0);
+        PrintUtils.printBTText("GROSS AMOUNT        " + df2.format(RECEIPT.getInstance().getAmountGrossDbl()), PrinterConstant.FontSize.LARGE, false, 0);
         if (RECEIPT.getInstance().isDiscounted()) {
             PrintUtils.printBTText("LESS: VAT           " + df2.format(RECEIPT.getInstance().getVat12Dbl()), NORMALFONT, false, 0);
             PrintUtils.printBTText("NET OF VAT          " + df2.format(RECEIPT.getInstance().getNetOfVATDbl()), NORMALFONT, false, 0);
@@ -848,7 +911,7 @@ public class ComputationActivity extends BaseActivity implements
         PrintUtils.printBTText("TIME OUT     : " + dtOUT, NORMALFONT, false, 0);
         PrintUtils.printBTText("Duration     : " + RECEIPT.getInstance().getDuration(), NORMALFONT, false, 0);
         PrintUtils.printBTText("", NORMALFONT, false, 0);
-            PrintUtils.printBTText("GROSS AMOUNT        " + RECEIPT.getInstance().getAmountGross(), PrinterConstant.FontSize.LARGE, false, 0);
+        PrintUtils.printBTText("GROSS AMOUNT        " + RECEIPT.getInstance().getAmountGross(), PrinterConstant.FontSize.LARGE, false, 0);
         if (RECEIPT.getInstance().isDiscounted()) {
             PrintUtils.printBTText("LESS: VAT           " + df2.format(RECEIPT.getInstance().getVat12Dbl()), NORMALFONT, false, 0);
             PrintUtils.printBTText("NET OF VAT          " + df2.format(RECEIPT.getInstance().getNetOfVATDbl()), NORMALFONT, false, 0);
@@ -915,7 +978,7 @@ public class ComputationActivity extends BaseActivity implements
             printOnly("TIME OUT     : " + dtOUT, PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
             printOnly("Duration     : " + RECEIPT.getInstance().getDuration(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
             printOnly("", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
-                printOnly("GROSS AMOUNT        " + df2.format(RECEIPT.getInstance().getAmountGrossDbl()), PrinterConstant.FontSize.LARGE, false, PrintItemObj.ALIGN.LEFT);
+            printOnly("GROSS AMOUNT        " + df2.format(RECEIPT.getInstance().getAmountGrossDbl()), PrinterConstant.FontSize.LARGE, false, PrintItemObj.ALIGN.LEFT);
             if (RECEIPT.getInstance().isDiscounted()) {
                 printOnly("LESS: VAT           " + df2.format(RECEIPT.getInstance().getVat12Dbl()), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
                 printOnly("NET OF VAT          " + df2.format(RECEIPT.getInstance().getNetOfVATDbl()), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
@@ -958,9 +1021,107 @@ public class ComputationActivity extends BaseActivity implements
         }
     }
 
+    public void saveOriginalReceipt() {
+
+        try {
+            Nsave("CHINESE GENERAL HOSPITAL MEDICAL CTR");
+            Nsave("286 BLUMENTRITT ST. STA. CRUZ MANILA");
+            Nsave("");
+            Nsave("");
+            Nsave(CONSTANTS.getInstance().getPTU());
+            Nsave("OFFICIAL RECEIPT");
+            Nsave("CUSTOMER COPY");
+            Nsave("RECEIPT NUM. : " + recNum);
+            Nsave("");
+            Nsave("Ent ID.      : " + GLOBALS.getInstance().getEntID());
+            Nsave("Cashier Name : " + GLOBALS.getInstance().getCashierName());
+            Nsave("Location     : " + CONSTANTS.getInstance().getExitID());
+            Nsave("Plate Number : " + GLOBALS.getInstance().getPlateNum());
+            Nsave("Parker Type  : " + GLOBALS.getInstance().getpTypeName());
+            String dtIN = RECEIPT.getInstance().getDatetimeIN().substring(0, RECEIPT.getInstance().getDatetimeIN().length() - 3);
+            String dtOUT = RECEIPT.getInstance().getDatetimeOUT().substring(0, RECEIPT.getInstance().getDatetimeOUT().length() - 3);
+            Nsave("TIME IN      : " + dtIN);
+            Nsave("TIME OUT     : " + dtOUT);
+            Nsave("Duration     : " + GLOBALS.getInstance().getDuration());
+            Nsave("");
+            Nsave("GROSS AMOUNT     " + df2.format(ca.AmountGross));
+            if (isDiscounted || TRType.compareToIgnoreCase("S") == 0) {
+                Nsave("LESS: VAT           " + df2.format(ca.vat12));
+                Nsave("NET OF VAT          " + df2.format(ca.NetOfVAT));
+                Nsave("LESS DSC            " + df2.format(ca.discount));
+                Nsave("NET OF DSC          " + df2.format(ca.NetOfVAT - ca.discount));
+                Nsave("ADD VAT             " + df2.format(ca.vat12));
+            } else if (isDiscounted == false) {
+                Nsave("VATable Sales       " + df2.format(ca.vatsale));
+                Nsave("VAT Amt(12%)        " + df2.format(ca.vat12));
+                Nsave("VAT Exempt          " + "0.00");
+                Nsave("Zero-Rated          " + "0.00");
+            }
+            Nsave("------------------------------------------");
+            Nsave("TOTAL AMOUNT DUE: " + df2.format(ca.AmountDue));
+            Nsave("------------------------------------------");
+            Nsave("***** CUSTOMER INFO *****");
+            Nsave("Customer Name:____________________________");
+            Nsave("Addr:_____________________________________");
+            Nsave("TIN :_____________________________________");
+            Nsave("Business Type:____________________________");
+
+            Nsave("please visit");
+            Nsave("www.theoretics.com.ph");
+            Nsave("PARKING POS SUPPLIER");
+            Nsave("APPLIED MODERN THEORETICS INC.");
+            Nsave("ACCRED: 0470083988742019071113");
+            Nsave("Date Issued: 02/05/2020");
+            Nsave("Valid Until: 02/05/2025");
+            Nsave(CONSTANTS.getInstance().getPTU());
+            Nsave("Date Issued: 03/03/2020");
+            Nsave("Valid Until: 03/03/2025");
+            Nsave("THANK YOU. FOR PARKING");
+
+            Nsave("");
+            Nsave("");
+            Nsave("");
+            //updateReceiptNumber();
+
+            GLOBALS.getInstance().setNewCard(false);
+
+            printerDev.printText(obj2Print, new AidlPrinterListener.Stub() {
+
+                @Override
+                public void onPrintFinish() throws RemoteException {
+                    //String endTime = getCurTime();
+                    //sendmessage(getStringByid(R.string.print_end) + endTime);
+                }
+
+                @Override
+                public void onError(int arg0) throws RemoteException {
+                    //sendmessage(getStringByid(R.string.print_faile_errcode) + arg0);
+                    //finish();
+                    if (null == GLOBALS.getInstance().getMyOperation().getPrinter() || GLOBALS.getInstance().getMyOperation().getPrinter().isConnected() == false) {
+                        connClick();
+                    }
+                }
+
+            });
+/*
+            updateXRead();
+            double grand = updateGrandTotal(GLOBALS.getInstance().getAmountDue());
+            double gross = updateGrossTotal(GLOBALS.getInstance().getAmountGross());
+            DBHelper dbh = new DBHelper(getApplicationContext());
+            HttpHandler sh = new HttpHandler(dbh);
+            sh.makeAmbulatory2Server(SERVER_NAME + "/cardAMBExit.php?rfid=", GLOBALS.getInstance().getCardNumber());
+            sh.sendGRAND2Server(SERVER_NAME + "/general/masters.php?terminalID="+CONSTANTS.getInstance().getExitID()+"&rawText=$", RECEIPT.getInstance().getReceiptNum() + "; " + gross + "; " + grand + " date:");
+            GLOBALS.getInstance().setPressed(false);
+
+ */
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public void printOriginalReceipt() {
-        String recNum = getReceiptNumber();
-        saveReceipt2Memory(recNum);
+        //String recNum = getReceiptNumber();
+        //saveReceipt2Memory(recNum);
         try {
             this.printerDev.setPrinterGray(12);
             printNsave("CHINESE GENERAL HOSPITAL MEDICAL CTR", PrinterConstant.FontSize.SMALL, true, PrintItemObj.ALIGN.CENTER);
@@ -983,7 +1144,7 @@ public class ComputationActivity extends BaseActivity implements
             printNsave("TIME OUT     : " + dtOUT, PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
             printNsave("Duration     : " + GLOBALS.getInstance().getDuration(), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
             printNsave("", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
-                printNsave("GROSS AMOUNT     " + df2.format(ca.AmountGross), PrinterConstant.FontSize.LARGE, false, PrintItemObj.ALIGN.LEFT);
+            printNsave("GROSS AMOUNT     " + df2.format(ca.AmountGross), PrinterConstant.FontSize.LARGE, false, PrintItemObj.ALIGN.LEFT);
             if (isDiscounted || TRType.compareToIgnoreCase("S") == 0) {
                 printNsave("LESS: VAT           " + df2.format(ca.vat12), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
                 printNsave("NET OF VAT          " + df2.format(ca.NetOfVAT), PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
@@ -1020,35 +1181,9 @@ public class ComputationActivity extends BaseActivity implements
             printNsave("", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
             printNsave("", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
             printNsave("", PrinterConstant.FontSize.NORMAL, false, PrintItemObj.ALIGN.LEFT);
-            updateReceiptNumber();
+            //updateReceiptNumber();
 
             GLOBALS.getInstance().setNewCard(false);
-            saveTransaction(RECEIPT.getInstance().getReceiptNum(),
-                    RECEIPT.getInstance().getCashierName(),
-                    RECEIPT.getInstance().getEntID(),
-                    RECEIPT.getInstance().getExitID(),
-                    RECEIPT.getInstance().getCardNumber(),
-                    RECEIPT.getInstance().getPlateNum(),
-                    RECEIPT.getInstance().getpType(),
-                    RECEIPT.getInstance().getNetOfDiscount(),
-                    RECEIPT.getInstance().getAmountDue() + "",
-                    RECEIPT.getInstance().getAmountGross(),
-                    RECEIPT.getInstance().getDiscount(),
-                    RECEIPT.getInstance().getVatAdjustment(),
-                    RECEIPT.getInstance().getVat12(),
-                    RECEIPT.getInstance().getVatsale(),
-                    RECEIPT.getInstance().getVatExemptedSales(),
-                    RECEIPT.getInstance().getTendered(),
-                    RECEIPT.getInstance().getChangeDue(),
-                    RECEIPT.getInstance().getDatetimeIN(),
-                    RECEIPT.getInstance().getDatetimeOUT(),
-                    RECEIPT.getInstance().getHoursElapsed(),
-                    RECEIPT.getInstance().getMinutesElapsed(),
-                    RECEIPT.getInstance().getSettlementRef(),
-                    RECEIPT.getInstance().getSettlementName(),
-                    RECEIPT.getInstance().getSettlementAddr(),
-                    RECEIPT.getInstance().getSettlementTIN(),
-                    RECEIPT.getInstance().getSettlementBusStyle());
 
             printerDev.printText(obj2Print, new AidlPrinterListener.Stub() {
 

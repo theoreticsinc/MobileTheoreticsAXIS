@@ -26,7 +26,7 @@ public class DBHelper extends SQLiteOpenHelper {
     //public static final String SERVER_NAME = "http://192.168.1.80";
     public static final String DATABASE_NAME = "mobilepos.db";
 
-    public static final int DATABASE_VERSION = 3;
+    public static final int DATABASE_VERSION = 7;
 
     public static final String NET_MANAGER_TABLE_NAME = "netmanager";
     public static final String NET_MANAGER_COLUMN_ID = "id";
@@ -289,7 +289,7 @@ public class DBHelper extends SQLiteOpenHelper {
                 CARD_COLUMN_TIMEIN + " DATETIME)");
 
         fillPOSDB(db);
-
+        //newPOSDB(db);
     }
 
     @Override
@@ -301,9 +301,12 @@ public class DBHelper extends SQLiteOpenHelper {
         //db.execSQL("DROP TABLE IF EXISTS "+ POS_TABLE_NAME);
         //db.execSQL("DROP TABLE IF EXISTS "+ CARD_TABLE_NAME);
         //db.execSQL("DROP TABLE IF EXISTS "+ NET_MANAGER_TABLE_NAME);
-        //if (oldVersion < 4) {
-            //newPOSDB(db);
-        //}
+        if (oldVersion < 4) {
+            updatePOSDB4(db);
+        }
+        if (oldVersion < 5) {
+            updatePOSDB5(db);
+        }
         //onCreate(db);
     }
 
@@ -759,9 +762,10 @@ public class DBHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put(MASTER_COLUMN_ID, 1);
-        contentValues.put(MASTER_COLUMN_RECEIPTNOS, "1");
-        contentValues.put(MASTER_COLUMN_GRANDTOTAL, "0");
-        contentValues.put(MASTER_COLUMN_GROSSTOTAL, "0");
+        //contentValues.put(MASTER_COLUMN_RECEIPTNOS, "1");//AB01000000001165
+        contentValues.put(MASTER_COLUMN_RECEIPTNOS, "1166");//AB01000000001165
+        contentValues.put(MASTER_COLUMN_GRANDTOTAL, "113477");//113477
+        contentValues.put(MASTER_COLUMN_GROSSTOTAL, "117380");//117380
         contentValues.put(MASTER_COLUMN_DATETIMERECORDED, sdf.format(now));
         db.insert(MASTER_TABLE_NAME, null, contentValues);
         return true;
@@ -1146,8 +1150,8 @@ public class DBHelper extends SQLiteOpenHelper {
         return newReceipt;
     }
 
-    public void newPOSDB(SQLiteDatabase db) {
-        System.out.println("ANGELO : [Checking new POS Users" + new Date().toString() + "]" );
+    private void updatePOSDB4(SQLiteDatabase db) {
+        System.out.println("ANGELO : [updatePOSDB4 new POS Users" + new Date().toString() + "]" );
         db.execSQL("INSERT INTO " + POS_TABLE_NAME + " VALUES(null, 'atdv', '" + md5("atdv") + "', 'atdv')");
         db.execSQL("INSERT INTO " + POS_TABLE_NAME + " VALUES(null, 'roda', '" + md5("roda") + "', 'roda')");
         db.execSQL("INSERT INTO " + POS_TABLE_NAME + " VALUES(null, 'mays', '" + md5("mays") + "', 'mays')");
@@ -1169,6 +1173,12 @@ public class DBHelper extends SQLiteOpenHelper {
         System.out.println("ANGELO : [Uploaded new POS Users" + new Date().toString() + "]" );
     }
 
+    private void updatePOSDB5(SQLiteDatabase db) {
+        System.out.println("ANGELO : [updatePOSDB5 new POS Users" + new Date().toString() + "]" );
+        db.execSQL("INSERT INTO " + POS_TABLE_NAME + " VALUES(null, 'jinopal', '" + md5("jinopal") + "', 'jinopal')");
+        db.execSQL("INSERT INTO " + POS_TABLE_NAME + " VALUES(null, 'smjmanlagnit', '" + md5("smjmanlagnit") + "', 'smjmanlagnit')");
+        System.out.println("ANGELO : [Uploaded new POS Users" + new Date().toString() + "]" );
+    }
 
     public void fillPOSDB(SQLiteDatabase db) {
         System.out.println("ANGELO : [Checking new POS Users" + new Date().toString() + "]" );

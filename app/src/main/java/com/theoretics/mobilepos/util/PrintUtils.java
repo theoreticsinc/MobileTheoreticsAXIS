@@ -60,19 +60,19 @@ public class PrintUtils {
         fp.setFont(false, false, false, false, 20, null);
         cp.setFontProperty(fp);
         cp.drawText(0,10,"");
-        cp.drawText(20,40,"                    please visit");
-        cp.drawText(20,60,"          www.theoretics.com.ph");
-        cp.drawText(20,80,"          PARKING POS SUPPLIER");
-        cp.drawText(1,100,"    APPLIED MODERN THEORETICS INC.");
-        cp.drawText(0,120,"    ACCRED: 0470083988742019071113");
-        cp.drawText(25,140,"         Date Issued: 02/05/2020");
-        cp.drawText(25,160,"         Valid Until: 02/05/2025");
+        cp.drawText(20,40,"                         please visit");
+        cp.drawText(20,60,"            www.theoretics.com.ph");
+        cp.drawText(20,80,"            PARKING POS SUPPLIER");
+        cp.drawText(1,100,"      APPLIED MODERN THEORETICS INC.");
+        cp.drawText(0,120,"      ACCRED: 0470083988742019071113");
+        cp.drawText(25,140,"             Date Issued: 02/05/2020");
+        cp.drawText(25,160,"             Valid Until: 02/05/2025");
         fp.setFont(false, false, false, false, 19, null);
         cp.setFontProperty(fp);
-        cp.drawText(0,180,"  " + CONSTANTS.getInstance().getPTU());
-        cp.drawText(25,200,"         Date Issued: 03/03/2020");
-        cp.drawText(25,220,"         Valid Until: 03/03/2025");
-        cp.drawText(20,240,"       THANK YOU. FOR PARKING");
+        cp.drawText(0,180,"    " + CONSTANTS.getInstance().getPTU());
+        cp.drawText(25,200,"             Date Issued: 03/03/2020");
+        cp.drawText(25,220,"             Valid Until: 03/03/2025");
+        cp.drawText(20,240,"           THANK YOU. FOR PARKING");
 
         mPrinter.printImage(cp.getCanvasImage());
 
